@@ -1878,6 +1878,10 @@ export default function Editor() {
     const handleExport = useCallback(() => {
     console.log('=== 开始导出 (多页面) ===');
     
+    const useBlackMask = settings.useBlackMask;
+    const sidebarBackgroundColor = settings.sidebarBackgroundColor;
+    const sidebarTextColor = settings.sidebarTextColor;
+
     // 处理所有页面内容
     const processedPages = pages.map(page => {
       const pageDiv = document.createElement('div');
@@ -1968,15 +1972,11 @@ export default function Editor() {
       .map(s => s.textContent)
       .join('\n');
     
-    const useBlackMask = settings.useBlackMask;
     const backgroundColor = useBlackMask 
       ? `rgba(0, 0, 0, ${settings.opacity / 100})`
       : `rgba(255, 255, 255, ${settings.opacity / 100})`;
     
-    const sidebarBackgroundColor = settings.sidebarBackgroundColor;
-
     const textColor = useBlackMask ? '#ffffff' : '#333';
-    const sidebarTextColor = settings.sidebarTextColor;
     const headingColor = settings.pageTitleColor || (useBlackMask ? '#60a5fa' : '#4361ee');
     const linkColor = useBlackMask ? '#60a5fa' : '#4361ee';
     const linkHoverColor = useBlackMask ? '#93c5fd' : '#3f37c9';
