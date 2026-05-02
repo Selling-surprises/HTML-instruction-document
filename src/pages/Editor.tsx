@@ -201,7 +201,6 @@ export default function Editor() {
     sourceUrl: '', // 原文链接
     pageTitleColor: '#4361ee', // 文档标题颜色
     sidebarBackgroundColor: '#f8fafc', // 侧边栏背景颜色
-    sidebarTextColor: '#334155', // 侧边栏文字颜色
   });
 
   // 链接编辑状态
@@ -1879,8 +1878,8 @@ export default function Editor() {
     console.log('=== 开始导出 (多页面) ===');
     
     const useBlackMask = settings.useBlackMask;
-    const sidebarBackgroundColor = settings.sidebarBackgroundColor;
-    const sidebarTextColor = settings.sidebarTextColor;
+    const sidebarBackgroundColor = settings.sidebarBackgroundColor || (useBlackMask ? '#1e1e1e' : '#f8fafc');
+    const sidebarTextColor = useBlackMask ? '#e5e7eb' : '#1e293b';
 
     // 处理所有页面内容
     const processedPages = pages.map(page => {
@@ -3840,7 +3839,6 @@ export default function Editor() {
                 onMovePage={handleMovePage}
                 isCollapsed={false}
                 side="left"
-                sidebarTextColor={settings.sidebarTextColor}
               />
             </SheetContent>
           </Sheet>
@@ -3931,8 +3929,10 @@ export default function Editor() {
           className="hidden md:flex h-full shrink-0 flex-col border-r border-border transition-all duration-300"
           style={{ 
             width: tocCollapsed ? 28 : tocWidth,
-            background: settings.enableGlassEffect ? 'transparent' : settings.sidebarBackgroundColor,
-            color: settings.sidebarTextColor,
+            background: settings.enableGlassEffect 
+              ? 'transparent' 
+              : (settings.sidebarBackgroundColor || (settings.useBlackMask ? '#1e1e1e' : '#f8fafc')),
+            color: settings.useBlackMask ? '#e5e7eb' : '#1e293b',
             backdropFilter: settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : 'none',
             WebkitBackdropFilter: settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : 'none'
           }}
@@ -3988,7 +3988,6 @@ export default function Editor() {
               opacity={settings.opacity}
               headerAlignWithPaper={true}
               titleColor={settings.pageTitleColor}
-              sidebarTextColor={settings.sidebarTextColor}
             />
           </div>
         </div>

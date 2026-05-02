@@ -107,25 +107,34 @@ export function SettingsPanel({
           <div className="space-y-3">
             <Label>文档标题及目录文字颜色</Label>
             <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg border border-border">
-              {PRESET_TOC_COLORS.map((item) => (
+              {[
+                { color: '', name: '不选择颜色' },
+                { color: '#ffffff', name: '白色' },
+                ...PRESET_TOC_COLORS
+              ].map((item) => (
                 <button
                   key={item.color}
                   onClick={() => onSettingsChange({ pageTitleColor: item.color })}
                   className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center ${
                     settings.pageTitleColor === item.color ? 'border-primary shadow-sm' : 'border-transparent'
                   }`}
-                  style={{ backgroundColor: item.color }}
+                  style={{ backgroundColor: item.color || '#f1f5f9' }}
                   title={item.name}
                 >
+                  {!item.color && (
+                    <div className="w-4 h-0.5 bg-red-500 rotate-45 relative">
+                      <div className="w-4 h-0.5 bg-red-500 rotate-90 absolute top-0 left-0" />
+                    </div>
+                  )}
                   {settings.pageTitleColor === item.color && (
-                    <div className="w-2 h-2 rounded-full bg-white shadow-sm" />
+                    <div className={`w-2 h-2 rounded-full ${item.color === '#ffffff' ? 'bg-slate-300' : 'bg-white'} shadow-sm`} />
                   )}
                 </button>
               ))}
               <div className="flex items-center gap-2 w-full mt-2">
                 <Input
                   type="color"
-                  value={settings.pageTitleColor}
+                  value={settings.pageTitleColor || '#000000'}
                   onChange={(e) => onSettingsChange({ pageTitleColor: e.target.value })}
                   className="w-10 h-8 p-0 border-none bg-transparent"
                 />
@@ -134,7 +143,7 @@ export function SettingsPanel({
                   value={settings.pageTitleColor}
                   onChange={(e) => onSettingsChange({ pageTitleColor: e.target.value })}
                   className="flex-1 h-8 text-xs font-mono"
-                  placeholder="#000000"
+                  placeholder="默认颜色"
                 />
               </div>
             </div>
@@ -147,25 +156,34 @@ export function SettingsPanel({
           <div className="space-y-3">
             <Label>侧边栏背景颜色</Label>
             <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg border border-border">
-              {PRESET_TOC_COLORS.map((item) => (
+              {[
+                { color: '', name: '不选择颜色' },
+                { color: '#ffffff', name: '白色' },
+                ...PRESET_TOC_COLORS
+              ].map((item) => (
                 <button
                   key={item.color}
                   onClick={() => onSettingsChange({ sidebarBackgroundColor: item.color })}
                   className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center ${
                     settings.sidebarBackgroundColor === item.color ? 'border-primary shadow-sm' : 'border-transparent'
                   }`}
-                  style={{ backgroundColor: item.color }}
+                  style={{ backgroundColor: item.color || '#f1f5f9' }}
                   title={item.name}
                 >
+                  {!item.color && (
+                    <div className="w-4 h-0.5 bg-red-500 rotate-45 relative">
+                      <div className="w-4 h-0.5 bg-red-500 rotate-90 absolute top-0 left-0" />
+                    </div>
+                  )}
                   {settings.sidebarBackgroundColor === item.color && (
-                    <div className="w-2 h-2 rounded-full bg-white shadow-sm" />
+                    <div className={`w-2 h-2 rounded-full ${item.color === '#ffffff' ? 'bg-slate-300' : 'bg-white'} shadow-sm`} />
                   )}
                 </button>
               ))}
               <div className="flex items-center gap-2 w-full mt-2">
                 <Input
                   type="color"
-                  value={settings.sidebarBackgroundColor}
+                  value={settings.sidebarBackgroundColor || '#ffffff'}
                   onChange={(e) => onSettingsChange({ sidebarBackgroundColor: e.target.value })}
                   className="w-10 h-8 p-0 border-none bg-transparent"
                 />
@@ -174,52 +192,7 @@ export function SettingsPanel({
                   value={settings.sidebarBackgroundColor}
                   onChange={(e) => onSettingsChange({ sidebarBackgroundColor: e.target.value })}
                   className="flex-1 h-8 text-xs font-mono"
-                  placeholder="#000000"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 侧边栏文字颜色 */}
-          <div className="space-y-3">
-            <Label>侧边栏文字颜色</Label>
-            <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg border border-border">
-              {[
-                { color: '#ffffff', name: '纯白' },
-                { color: '#f8fafc', name: '浅灰白' },
-                { color: '#e2e8f0', name: '亮灰' },
-                { color: '#94a3b8', name: '中灰' },
-                { color: '#475569', name: '深灰' },
-                { color: '#1e293b', name: '藏青' },
-                { color: '#000000', name: '纯黑' },
-              ].map((item) => (
-                <button
-                  key={item.color}
-                  onClick={() => onSettingsChange({ sidebarTextColor: item.color })}
-                  className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center ${
-                    settings.sidebarTextColor === item.color ? 'border-primary shadow-sm' : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: item.color }}
-                  title={item.name}
-                >
-                  {settings.sidebarTextColor === item.color && (
-                    <div className="w-2 h-2 rounded-full bg-white shadow-sm" />
-                  )}
-                </button>
-              ))}
-              <div className="flex items-center gap-2 w-full mt-2">
-                <Input
-                  type="color"
-                  value={settings.sidebarTextColor}
-                  onChange={(e) => onSettingsChange({ sidebarTextColor: e.target.value })}
-                  className="w-10 h-8 p-0 border-none bg-transparent"
-                />
-                <Input
-                  type="text"
-                  value={settings.sidebarTextColor}
-                  onChange={(e) => onSettingsChange({ sidebarTextColor: e.target.value })}
-                  className="flex-1 h-8 text-xs font-mono"
-                  placeholder="#000000"
+                  placeholder="默认颜色"
                 />
               </div>
             </div>

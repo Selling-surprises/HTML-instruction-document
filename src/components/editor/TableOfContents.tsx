@@ -38,7 +38,6 @@ interface TableOfContentsProps {
   opacity?: number;
   headerAlignWithPaper?: boolean;
   titleColor?: string;
-  sidebarTextColor?: string;
 }
 
 export function TableOfContents({
@@ -57,7 +56,6 @@ export function TableOfContents({
   opacity = 100,
   headerAlignWithPaper = false,
   titleColor,
-  sidebarTextColor,
 }: TableOfContentsProps) {
   // 记录节点的展开/折叠状态，默认全部展开
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
@@ -201,7 +199,7 @@ export function TableOfContents({
                   paddingBottom: 9,
                   borderLeft: isActive && !showChild ? '3px solid #2B579A' : showChild ? '3px solid #2B579A' : '3px solid transparent',
                   cursor: isDragging ? 'grabbing' : 'pointer',
-                  color: (!isActive && !showChild) ? sidebarTextColor : undefined
+                  color: page.titleColor || titleColor
                 }}
                 onClick={() => !isDragging && onPageClick(page.id)}
               >
@@ -224,7 +222,7 @@ export function TableOfContents({
                   className={`flex-1 whitespace-nowrap ml-1.5 mr-1 text-sm ${level === 0 ? 'font-semibold' : 'font-normal'}`}
                   style={{ 
                     fontSize: 14,
-                    color: page.titleColor || titleColor || sidebarTextColor || '#1e293b'
+                    color: page.titleColor || titleColor || '#1e293b'
                   }}
                 >
                   {page.title}
@@ -381,8 +379,8 @@ export function TableOfContents({
         className={`flex items-center justify-between px-4 py-3 border-b select-none shrink-0 ${headerAlignWithPaper ? 'border-t' : ''}`}
         style={{ background: 'transparent', borderColor: '#e2e8f0', minHeight: 44 }}
       >
-        <div className="flex items-center gap-2" style={{ color: sidebarTextColor || '#1e293b', fontSize: 13, fontWeight: 700 }}>
-          <BookOpen className="h-4 w-4 shrink-0" style={{ color: sidebarTextColor || '#2B579A' }} />
+        <div className="flex items-center gap-2" style={{ color: '#1e293b', fontSize: 13, fontWeight: 700 }}>
+          <BookOpen className="h-4 w-4 shrink-0" style={{ color: '#2B579A' }} />
           <span>目录</span>
         </div>
         <div className="flex items-center gap-1">

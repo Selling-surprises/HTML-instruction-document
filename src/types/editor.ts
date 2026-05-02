@@ -16,7 +16,6 @@ export interface EditorSettings {
   sourceUrl: string; // 原文链接地址
   pageTitleColor: string; // 文档标题颜色
   sidebarBackgroundColor: string; // 侧边栏背景颜色
-  sidebarTextColor: string; // 侧边栏文字颜色
 }
 
 export interface HeadingItem {
