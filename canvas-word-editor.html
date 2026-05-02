@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas Word 文档编辑器 - 表格模块</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Microsoft YaHei', 'SimSun', sans-serif;
+      background: #f5f5f5;
+      overflow: hidden;
+    }
+    .editor-toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 10px;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .toolbar-group {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+    .toolbar-divider {
+      width: 1px;
+      height: 30px;
+      background: #e0e0e0;
+    }
+    .toolbar-btn {
+      padding: 6px 12px;
+      border: 1px solid #d0d0d0;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .toolbar-btn:hover:not(:disabled) {
+      background: #f0f0f0;
+      border-color: #0078d7;
+    }
+    .toolbar-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .toolbar-btn.active {
+      background: #0078d7;
+      color: white;
+      border-color: #0078d7;
+    }
+    .editor-container {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      bottom: 30px;
+      overflow: auto;
+      background: #e0e0e0;
+      padding: 20px;
+    }
+    .canvas-wrapper {
+      display: inline-block;
+      margin: 0 auto;
+    }
+    #editor-canvas {
+      display: block;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      cursor: text;
+    }
+    .editor-statusbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: white;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 20px;
+      font-size: 12px;
+      color: #666;
+    }
+    .table-grid-selector {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      padding: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+      z-index: 200;
+      min-width: 180px;
+    }
+    .table-grid-selector.show {
+      display: block;
+    }
+    .grid-cells {
+      display: grid;
+      grid-template-columns: repeat(8, 22px);
+      gap: 2px;
+      margin-bottom: 8px;
+    }
+    .grid-cell {
+      width: 22px;
+      height: 22px;
+      border: 1px solid #e0e0e0;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .grid-cell.hover {
+      background: #0078d7;
+      border-color: #0078d7;
+    }
+    .grid-label {
+      text-align: center;
+      font-size: 13px;
+      color: #333;
+      font-weight: 500;
+    }
+    .grid-title {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .context-menu {
+      position: fixed;
+      background: white;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+      z-index: 300;
+      min-width: 180px;
+    }
+    .context-menu.show {
+      display: block;
+    }
+    .context-menu-item {
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .context-menu-item:hover {
+      background: #f0f0f0;
+    }
+    .context-menu-item:last-child {
+      border-bottom: none;
+    }
+    .context-menu-item.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    select.toolbar-select {
+      padding: 6px 8px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    input[type="color"] {
+      width: 40px;
+      height: 32px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- 工具栏 -->
+  <div class="editor-toolbar">
+    <!-- 文件操作 -->
+    <div class="toolbar-group">
+      <button class="toolbar-btn" onclick="editor.newDocument()">新建</button>
+      <button class="toolbar-btn" onclick="editor.openDocument()">打开</button>
+      <button class="toolbar-btn" onclick="editor.saveDocument()">保存</button>
+      <button class="toolbar-btn" onclick="editor.exportMarkdown()">导出 Markdown</button>
+    </div>
+    
+    <div class="toolbar-divider"></div>
+    
+    <!-- 格式 -->
+    <div class="toolbar-group">
+      <select class="toolbar-select" id="fontFamily" onchange="editor.setFontFamily(this.value)">
+        <option value="SimSun">宋体</option>
+        <option value="SimHei">黑体</option>
+        <option value="Microsoft YaHei" selected>微软雅黑</option>
+        <option value="KaiTi">楷体</option>
+      </select>
+      <select class="toolbar-select" id="fontSize" onchange="editor.setFontSize(this.value)">
+        <option value="12">小四(12pt)</option>
+        <option value="14">四号(14pt)</option>
+        <option value="16" selected>小三(16pt)</option>
+        <option value="18">三号(18pt)</option>
+        <option value="22">小二(22pt)</option>
+      </select>
+    </div>
+    
+    <div class="toolbar-divider"></div>
+    
+    <!-- 样式 -->
+    <div class="toolbar-group">
+      <button class="toolbar-btn" id="boldBtn" onclick="editor.toggleBold()"><b>B</b></button>
+      <button class="toolbar-btn" id="italicBtn" onclick="editor.toggleItalic()"><i>I</i></button>
+      <button class="toolbar-btn" id="underlineBtn" onclick="editor.toggleUnderline()"><u>U</u></button>
+      <input type="color" id="textColor" value="#333333" onchange="editor.setTextColor(this.value)" title="文字颜色">
+      <input type="color" id="bgColor" value="#ffffff" onchange="editor.setBackgroundColor(this.value)" title="背景颜色">
+    </div>
+    
+    <div class="toolbar-divider"></div>
+    
+    <!-- 对齐 -->
+    <div class="toolbar-group">
+      <button class="toolbar-btn" onclick="editor.setAlign('left')">左对齐</button>
+      <button class="toolbar-btn" onclick="editor.setAlign('center')">居中</button>
+      <button class="toolbar-btn" onclick="editor.setAlign('right')">右对齐</button>
+    </div>
+    
+    <div class="toolbar-divider"></div>
+    
+    <!-- 表格 -->
+    <div class="toolbar-group" style="position: relative;">
+      <button class="toolbar-btn" id="insertTableBtn" onclick="toggleTableGrid()">插入表格</button>
+      <div class="table-grid-selector" id="tableGridSelector">
+        <div class="grid-title">拖动选择行列数</div>
+        <div id="gridContainer" class="grid-cells"></div>
+        <div class="grid-label" id="gridLabel">0 x 0</div>
+      </div>
+      <button class="toolbar-btn" id="mergeCellsBtn" onclick="editor.mergeCells()" disabled>合并单元格</button>
+      <button class="toolbar-btn" id="splitCellBtn" onclick="editor.splitCell()" disabled>拆分单元格</button>
+    </div>
+  </div>
+  
+  <!-- 编辑器主体 -->
+  <div class="editor-container" id="editorContainer">
+    <div class="canvas-wrapper">
+      <canvas id="editor-canvas"></canvas>
+    </div>
+  </div>
+  
+  <!-- 状态栏 -->
+  <div class="editor-statusbar">
+    <span>第 <span id="pageNum">1</span> 页，共 <span id="pageTotal">1</span> 页</span>
+    <span id="wordCount">0 字</span>
+    <span id="zoomLevel">100%</span>
+    <span id="cursorInfo">行: 1, 列: 1</span>
+  </div>
+  
+  <!-- 右键菜单 -->
+  <div class="context-menu" id="contextMenu">
+    <div class="context-menu-item" onclick="editor.insertRowAbove()">在上方插入行</div>
+    <div class="context-menu-item" onclick="editor.insertRowBelow()">在下方插入行</div>
+    <div class="context-menu-item" onclick="editor.insertColLeft()">在左侧插入列</div>
+    <div class="context-menu-item" onclick="editor.insertColRight()">在右侧插入列</div>
+    <div class="context-menu-item" onclick="editor.deleteRow()">删除行</div>
+    <div class="context-menu-item" onclick="editor.deleteCol()">删除列</div>
+    <div class="context-menu-item" onclick="editor.deleteTable()">删除表格</div>
+    <div class="context-menu-item" onclick="editor.mergeCells()">合并单元格</div>
+    <div class="context-menu-item" onclick="editor.splitCell()">拆分单元格</div>
+  </div>
+
+  <script>
+    // ==================== 数据结构定义 ====================
+    
+    /**
+     * 文档数据模型
+     */
+    class DocumentData {
+      constructor() {
+        this.pages = [];
+        this.margins = { top: 60, right: 60, bottom: 60, left: 60 };
+        this.pageSize = { width: 595, height: 842 }; // A4 @ 72dpi
+        this.defaultStyle = {
+          fontFamily: 'Microsoft YaHei',
+          fontSize: 16,
+          color: '#333333',
+          bold: false,
+          italic: false,
+          underline: false
+        };
+      }
+    }
+    
+    /**
+     * 页面节点
+     */
+    class Page {
+      constructor(index) {
+        this.index = index;
+        this.elements = [];
+        this.header = null;
+        this.footer = null;
+      }
+    }
+    
+    /**
+     * 段落元素
+     */
+    class Paragraph {
+      constructor() {
+        this.id = this.generateId();
+        this.type = 'paragraph';
+        this.x = 0;
+        this.y = 0;
+        this.width = 0;
+        this.height = 0;
+        this.content = [];
+        this.lineHeight = 24;
+        this.textAlign = 'left';
+        this.indent = { firstLine: 0, hanging: 0 };
+        this.spacing = { before: 0, after: 0, line: 1.5 };
+      }
+      
+      generateId() {
+        return 'para_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      }
+    }
+    
+    /**
+     * 文本片段
+     */
+    class TextRun {
+      constructor(text, style = {}) {
+        this.text = text;
+        this.fontFamily = style.fontFamily || 'Microsoft YaHei';
+        this.fontSize = style.fontSize || 16;
+        this.bold = style.bold || false;
+        this.italic = style.italic || false;
+        this.underline = style.underline || false;
+        this.color = style.color || '#333333';
+        this.backgroundColor = style.backgroundColor || 'transparent';
+      }
+    }
+    
+    /**
+     * 表格元素
+     */
+    class Table {
+      constructor(rows, cols) {
+        this.id = this.generateId();
+        this.type = 'table';
+        this.x = 0;
+        this.y = 0;
+        this.width = 0;
+        this.height = 0;
+        this.rows = rows;
+        this.cols = cols;
+        this.cells = [];
+        this.rowHeights = new Array(rows).fill(40);
+        this.colWidths = [];
+        this.hasHeader = false;
+        this.border = {
+          width: 1,
+          color: '#000000',
+          style: 'solid'
+        };
+        this.alignment = 'left';
+        
+        // 初始化单元格
+        for (let r = 0; r < rows; r++) {
+          const row = [];
+          for (let c = 0; c < cols; c++) {
+            row.push(new TableCell(r, c));
+          }
+          this.cells.push(row);
+        }
+      }
+      
+      generateId() {
+        return 'table_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      }
+    }
+    
+    /**
+     * 表格单元格
+     */
+    class TableCell {
+      constructor(row, col) {
+        this.id = this.generateId();
+        this.row = row;
+        this.col = col;
+        this.rowSpan = 1;
+        this.colSpan = 1;
+        this.width = 0;
+        this.height = 0;
+        this.content = [];
+        this.verticalAlign = 'middle';
+        this.border = {
+          top: { width: 1, color: '#000000', style: 'solid' },
+          right: { width: 1, color: '#000000', style: 'solid' },
+          bottom: { width: 1, color: '#000000', style: 'solid' },
+          left: { width: 1, color: '#000000', style: 'solid' }
+        };
+        this.backgroundColor = 'transparent';
+        this.padding = { top: 8, right: 8, bottom: 8, left: 8 };
+        this.isVirtual = false;
+        this.needsRelayout = true; // 默认需要布局
+        this.textLayout = null;    // 布局缓存
+        this.lastLayoutWidth = 0;  // 上次布局宽度
+        
+        // 默认添加一个空段落
+        const para = new Paragraph();
+        para.content.push(new TextRun(''));
+        this.content.push(para);
+      }
+      
+      generateId() {
+        return 'cell_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      }
+    }
+    
+    // ==================== Canvas 渲染引擎 ====================
+    
+    class CanvasEditorRenderer {
+      constructor(canvas, documentData) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.document = documentData;
+        this.scale = 1.0;
+        this.currentPage = 0;
+        this.cursor = { page: 0, element: null, offset: 0, visible: true };
+        this.selection = { start: null, end: null, isSelecting: false };
+        this.selectedCells = [];
+        this.resizing = { active: false, table: null, type: null, index: null };
+        
+        // 初始化画布尺寸
+        this.updateCanvasSize();
+        
+        // 绑定事件
+        this.bindEvents();
+        
+        // 启动光标闪烁
+        this.startCaretBlink();
+      }
+      
+      updateCanvasSize() {
+        const totalPages = this.document.pages.length || 1;
+        const pageGap = 20;
+        const canvasWidth = this.document.pageSize.width + 40;
+        const canvasHeight = (this.document.pageSize.height + pageGap) * totalPages + 20;
+        
+        this.canvas.width = canvasWidth * this.scale;
+        this.canvas.height = canvasHeight * this.scale;
+        this.canvas.style.width = canvasWidth + 'px';
+        this.canvas.style.height = canvasHeight + 'px';
+        
+        this.ctx.scale(this.scale, this.scale);
+      }
+      
+      render() {
+        // 清空画布
+        this.ctx.clearRect(0, 0, this.canvas.width / this.scale, this.canvas.height / this.scale);
+        
+        // 绘制背景
+        this.ctx.fillStyle = '#e0e0e0';
+        this.ctx.fillRect(0, 0, this.canvas.width / this.scale, this.canvas.height / this.scale);
+        
+        // 遍历每一页
+        this.document.pages.forEach((page, index) => {
+          this.renderPage(page, index);
+        });
+        
+        // 渲染选区
+        this.renderSelection();
+        
+        // 渲染光标
+        this.renderCursor();
+      }
+      
+      renderPage(page, index) {
+        const pageGap = 20;
+        const x = 20;
+        const y = 10 + (this.document.pageSize.height + pageGap) * index;
+        const width = this.document.pageSize.width;
+        const height = this.document.pageSize.height;
+        
+        // 1. 绘制页面背景（白色纸张）
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(x, y, width, height);
+        
+        // 2. 绘制页边距辅助线
+        this.ctx.strokeStyle = '#e0e0e0';
+        this.ctx.setLineDash([5, 5]);
+        this.ctx.lineWidth = 1;
+        const m = this.document.margins;
+        this.ctx.strokeRect(
+          x + m.left,
+          y + m.top,
+          width - m.left - m.right,
+          height - m.top - m.bottom
+        );
+        this.ctx.setLineDash([]);
+        
+        // 3. 绘制页面内容元素
+        page.elements.forEach(element => {
+          this.renderElement(element, x, y);
+        });
+        
+        // 4. 绘制页面边框
+        this.ctx.strokeStyle = '#d0d0d0';
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(x, y, width, height);
+        
+        // 5. 绘制页码
+        this.ctx.fillStyle = '#999999';
+        this.ctx.font = '12px Microsoft YaHei';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(`第 ${index + 1} 页`, x + width / 2, y + height - 15);
+      }
+      
+      renderElement(element, pageX, pageY) {
+        const absX = pageX + element.x;
+        const absY = pageY + element.y;
+        
+        switch (element.type) {
+          case 'paragraph':
+            this.renderParagraph(element, absX, absY);
+            break;
+          case 'table':
+            this.renderTable(element, absX, absY);
+            break;
+        }
+      }
+      
+      renderParagraph(para, x, y) {
+        const ctx = this.ctx;
+        const maxWidth = para.width || (this.document.pageSize.width - this.document.margins.left - this.document.margins.right);
+        
+        // --- 修复：文本垂直对齐和换行 ---
+        // 1. 如果有缓存布局且宽度没变，直接用
+        if (para.textLayout && !para.needsRelayout && para.lastLayoutWidth === maxWidth) {
+          this.renderTextLayout(para.textLayout, x, y, para.textAlign, maxWidth);
+          return;
+        }
+
+        // 2. 重新计算换行
+        const layout = this.calculateTextLayout(para, maxWidth);
+        para.textLayout = layout;
+        para.lastLayoutWidth = maxWidth;
+        para.needsRelayout = false;
+        
+        // 3. 渲染
+        this.renderTextLayout(layout, x, y, para.textAlign, maxWidth);
+      }
+
+      calculateTextLayout(para, maxWidth) {
+        const ctx = this.ctx;
+        const lines = [];
+        let currentLine = [];
+        let currentLineWidth = 0;
+        
+        para.content.forEach(run => {
+          const text = run.text || '';
+          for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            ctx.font = this.buildFontString(run);
+            const metrics = ctx.measureText(char);
+            const charWidth = metrics.width;
+            
+            if (currentLineWidth + charWidth > maxWidth && currentLine.length > 0) {
+              lines.push({ line: currentLine, width: currentLineWidth });
+              currentLine = [];
+              currentLineWidth = 0;
+            }
+            
+            currentLine.push({ char, style: run, width: charWidth });
+            currentLineWidth += charWidth;
+          }
+        });
+        
+        if (currentLine.length > 0) {
+          lines.push({ line: currentLine, width: currentLineWidth });
+        }
+        
+        return { lines, lineHeight: para.lineHeight };
+      }
+
+      renderTextLayout(layout, x, y, align, maxWidth) {
+        layout.lines.forEach((lineData, index) => {
+          const lineY = y + (index * layout.lineHeight);
+          this.renderTextLine(lineData.line, x, lineY, align, maxWidth);
+        });
+      }
+      
+      renderTextLine(line, x, y, align, maxWidth) {
+        const ctx = this.ctx;
+        const lineWidth = line.reduce((sum, item) => sum + item.width, 0);
+        
+        let startX = x;
+        if (align === 'center') {
+          startX = x + (maxWidth - lineWidth) / 2;
+        } else if (align === 'right') {
+          startX = x + maxWidth - lineWidth;
+        }
+        
+        let currentX = startX;
+        line.forEach(item => {
+          ctx.font = this.buildFontString(item.style);
+          ctx.fillStyle = item.style.color;
+          ctx.textBaseline = 'alphabetic';
+          
+          // 背景色
+          if (item.style.backgroundColor && item.style.backgroundColor !== 'transparent') {
+            ctx.fillStyle = item.style.backgroundColor;
+            ctx.fillRect(currentX, y - 16, item.width, 20);
+            ctx.fillStyle = item.style.color;
+          }
+          
+          ctx.fillText(item.char, currentX, y);
+          
+          // 下划线
+          if (item.style.underline) {
+            ctx.strokeStyle = item.style.color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(currentX, y + 2);
+            ctx.lineTo(currentX + item.width, y + 2);
+            ctx.stroke();
+          }
+          
+          currentX += item.width;
+        });
+      }
+      
+      buildFontString(style) {
+        let font = '';
+        if (style.italic) font += 'italic ';
+        if (style.bold) font += 'bold ';
+        font += style.fontSize + 'px ';
+        font += style.fontFamily;
+        return font;
+      }
+      
+      renderTable(table, x, y) {
+        const ctx = this.ctx;
+        
+        // 预计算每个单元格的实际位置和尺寸
+        const cellRects = this.calculateTableLayout(table);
+        
+        // 1. 绘制单元格背景
+        table.cells.flat().forEach(cell => {
+          if (cell.isVirtual) return;
+          const rect = cellRects[cell.id];
+          
+          // 检查是否被选中
+          const isSelected = this.selectedCells.some(sc => sc.id === cell.id);
+          
+          if (cell.backgroundColor && cell.backgroundColor !== 'transparent') {
+            ctx.fillStyle = cell.backgroundColor;
+            ctx.fillRect(x + rect.x, y + rect.y, rect.width, rect.height);
+          }
+          
+          // 选中高亮
+          if (isSelected) {
+            ctx.fillStyle = 'rgba(0, 120, 215, 0.2)';
+            ctx.fillRect(x + rect.x, y + rect.y, rect.width, rect.height);
+          }
+        });
+        
+        // 2. 绘制单元格内容
+        table.cells.flat().forEach(cell => {
+          if (cell.isVirtual) return;
+          const rect = cellRects[cell.id];
+          
+          // 【关键修复】计算内容绘制区域（减去 padding）
+          const contentX = x + rect.x + cell.padding.left;
+          const contentY = y + rect.y + cell.padding.top;
+          const contentWidth = rect.width - cell.padding.left - cell.padding.right;
+          const contentHeight = rect.height - cell.padding.top - cell.padding.bottom;
+          
+          // 计算该单元格内所有段落的总体内容高度
+          let totalContentHeight = 0;
+          const paraLayouts = cell.content.map(para => {
+            // 每次内容宽度变化或强制要求时，重新计算文字布局
+            if (cell.needsRelayout || cell.lastLayoutWidth !== contentWidth) {
+              para.textLayout = this.calculateTextLayout(para, contentWidth);
+              para.lastLayoutWidth = contentWidth;
+              para.needsRelayout = false;
+            }
+            const h = para.textLayout.lines.length * para.textLayout.lineHeight;
+            totalContentHeight += h;
+            return { para, height: h };
+          });
+          cell.needsRelayout = false;
+          cell.lastLayoutWidth = contentWidth;
+
+          // 【关键修复】垂直居中偏移计算
+          let startY = contentY;
+          if (cell.verticalAlign === 'middle') {
+            startY = contentY + Math.max(0, (contentHeight - totalContentHeight) / 2);
+          } else if (cell.verticalAlign === 'bottom') {
+            startY = contentY + Math.max(0, contentHeight - totalContentHeight);
+          }
+          
+          // 渲染单元格内段落
+          let currentParaY = startY;
+          paraLayouts.forEach(layout => {
+            layout.para.textLayout.lines.forEach((lineData, lineIndex) => {
+              const lineY = currentParaY + (lineIndex * layout.para.textLayout.lineHeight);
+              
+              // 【关键修复】水平对齐
+              let lineX = contentX;
+              if (layout.para.textAlign === 'center') {
+                lineX = contentX + (contentWidth - lineData.width) / 2;
+              } else if (layout.para.textAlign === 'right') {
+                lineX = contentX + (contentWidth - lineData.width);
+              }
+              
+              this.renderTextLine(lineData.line, lineX, lineY, layout.para.textAlign, contentWidth);
+            });
+            currentParaY += layout.height;
+          });
+        });
+        
+        // 3. 绘制表格边框
+        this.renderTableBorders(table, cellRects, x, y);
+      }
+      
+      /**
+       * 预计算所有单元格的渲染矩形（关键函数）
+       */
+      calculateTableLayout(table) {
+        return this.calculateCellRects(table);
+      }
+      
+      calculateCellContentHeight(cell) {
+        let totalHeight = 0;
+
+      /**
+       * 计算单元格实际渲染宽度（关键函数）
+       * @param {TableCell} cell - 单元格
+       * @param {Table} table - 表格
+       * @returns {number} 实际像素宽度
+       */
+      getCellRenderWidth(cell, table) {
+        let width = 0;
+        // 累加所跨的所有逻辑列宽度
+        for (let c = cell.col; c < cell.col + cell.colSpan; c++) {
+          // 【关键】确保不越界
+          if (c < table.colWidths.length) {
+            width += table.colWidths[c];
+          }
+        }
+        return width;
+      }
+
+      /**
+       * 计算单元格实际渲染高度
+       */
+      getCellRenderHeight(cell, table) {
+        let height = 0;
+        for (let r = cell.row; r < cell.row + cell.rowSpan; r++) {
+          if (r < table.rowHeights.length) {
+            height += table.rowHeights[r];
+          }
+        }
+        return height;
+      }
+
+      /**
+       * 预计算所有单元格的渲染矩形（关键函数）
+       */
+      calculateCellRects(table) {
+        const rects = {};
+        for (let r = 0; r < table.rows; r++) {
+          let currentX = 0;
+          for (let c = 0; c < table.cols; c++) {
+            const cell = table.cells[r][c];
+            // 【关键】跳过虚拟单元格，它们没有独立的渲染区域
+            if (cell.isVirtual) {
+              currentX += table.colWidths[c];
+              continue;
+            }
+            // 计算尺寸（累加跨度的宽高）
+            const width = this.getCellRenderWidth(cell, table);
+            const height = this.getCellRenderHeight(cell, table);
+            rects[cell.id] = {
+              x: currentX,
+              y: this.getRowStartY(table, r), // 计算该行的起始 Y
+              width: width,
+              height: height
+            };
+            // 移动 x 坐标（只移动当前逻辑列宽度，不是单元格宽度）
+            currentX += table.colWidths[c];
+          }
+        }
+        return rects;
+      }
+
+      /**
+       * 获取某行的起始 Y 坐标
+       */
+      getRowStartY(table, rowIndex) {
+        let y = 0;
+        for (let i = 0; i < rowIndex; i++) {
+          y += table.rowHeights[i];
+        }
+        return y;
+      }
+
+        cell.content.forEach(para => {
+          totalHeight += para.lineHeight;
+        });
+        return totalHeight;
+      }
+      
+      renderTableBorders(table, cellRects, offsetX, offsetY) {
+        const ctx = this.ctx;
+        
+        table.cells.flat().forEach(cell => {
+          if (cell.isVirtual) return;
+          const rect = cellRects[cell.id];
+          const x = offsetX + rect.x;
+          const y = offsetY + rect.y;
+          const w = rect.width;
+          const h = rect.height;
+          
+          // 上边
+          if (cell.border.top.style !== 'none') {
+            ctx.lineWidth = cell.border.top.width;
+            ctx.strokeStyle = cell.border.top.color;
+            this.setBorderStyle(ctx, cell.border.top.style);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
+            ctx.stroke();
+          }
+          
+          // 右边
+          if (cell.border.right.style !== 'none') {
+            ctx.lineWidth = cell.border.right.width;
+            ctx.strokeStyle = cell.border.right.color;
+            this.setBorderStyle(ctx, cell.border.right.style);
+            ctx.beginPath();
+            ctx.moveTo(x + w, y);
+            ctx.lineTo(x + w, y + h);
+            ctx.stroke();
+          }
+          
+          // 下边
+          if (cell.border.bottom.style !== 'none') {
+            ctx.lineWidth = cell.border.bottom.width;
+            ctx.strokeStyle = cell.border.bottom.color;
+            this.setBorderStyle(ctx, cell.border.bottom.style);
+            ctx.beginPath();
+            ctx.moveTo(x, y + h);
+            ctx.lineTo(x + w, y + h);
+            ctx.stroke();
+          }
+          
+          // 左边
+          if (cell.border.left.style !== 'none') {
+            ctx.lineWidth = cell.border.left.width;
+            ctx.strokeStyle = cell.border.left.color;
+            this.setBorderStyle(ctx, cell.border.left.style);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + h);
+            ctx.stroke();
+          }
+        });
+        
+        ctx.setLineDash([]);
+      }
+      
+      setBorderStyle(ctx, style) {
+        switch (style) {
+          case 'dashed':
+            ctx.setLineDash([5, 3]);
+            break;
+          case 'dotted':
+            ctx.setLineDash([2, 2]);
+            break;
+          default:
+            ctx.setLineDash([]);
+        }
+      }
+      
+      renderCursor() {
+        if (!this.cursor.visible || !this.cursor.element) return;
+        
+        // 简化：在当前元素起始位置绘制光标
+        const page = this.document.pages[this.cursor.page];
+        if (!page) return;
+        
+        const element = this.cursor.element;
+        const pageGap = 20;
+        const pageX = 20;
+        const pageY = 10 + (this.document.pageSize.height + pageGap) * this.cursor.page;
+        
+        const x = pageX + element.x + this.document.margins.left;
+        const y = pageY + element.y + this.document.margins.top;
+        
+        this.ctx.save();
+        this.ctx.fillStyle = '#000';
+        this.ctx.fillRect(x, y, 2, 20);
+        this.ctx.restore();
+      }
+      
+      renderSelection() {
+        // 简化：绘制选中的单元格高亮
+        if (this.selectedCells.length === 0) return;
+        
+        // 已在 renderTable 中处理
+      }
+      
+      startCaretBlink() {
+        setInterval(() => {
+          this.cursor.visible = !this.cursor.visible;
+          this.render();
+        }, 530);
+      }
+      
+      bindEvents() {
+        this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
+        this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
+        this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
+        this.canvas.addEventListener('contextmenu', this.onContextMenu.bind(this));
+        document.addEventListener('keydown', this.onKeyDown.bind(this));
+      }
+      
+      onMouseDown(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const clientX = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+        const clientY = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+        
+        const x = clientX / this.scale;
+        const y = clientY / this.scale;
+        
+        // 1. 优先检测调整手柄
+        const handle = this.detectResizeHandle(x, y);
+        if (handle) {
+          this.resizing.active = true;
+          this.resizing.type = handle.type;
+          this.resizing.index = handle.index;
+          this.resizing.table = handle.table;
+          this.resizing.startX = x;
+          this.resizing.startY = y;
+          this.resizing.startSize = handle.type === 'col' ? handle.table.colWidths[handle.index] : handle.table.rowHeights[handle.index];
+          e.preventDefault();
+          return;
+        }
+
+        // 2. 命中测试
+        const hit = this.hitTest(x, y);
+        if (hit) {
+          if (hit.type === 'cell') {
+            this.selectedCells = [hit.cell];
+            this.selection.isSelecting = true;
+            this.selection.start = hit.cell;
+            this.render();
+          }
+        }
+      }
+      
+      onMouseMove(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (this.canvas.width / rect.width) / this.scale;
+        const y = (e.clientY - rect.top) * (this.canvas.height / rect.height) / this.scale;
+
+        // 如果正在调整大小
+        if (this.resizing.active) {
+          const delta = this.resizing.type === 'col' ? x - this.resizing.startX : y - this.resizing.startY;
+          const newSize = Math.max(30, this.resizing.startSize + delta);
+          
+          if (this.resizing.type === 'col') {
+            this.resizing.table.colWidths[this.resizing.index] = newSize;
+            // 【关键】标记表格中所有单元格需要重新布局（列宽影响所有行）
+            this.resizing.table.cells.flat().forEach(cell => {
+              cell.needsRelayout = true;
+              cell.textLayout = null;
+            });
+          } else {
+            this.resizing.table.rowHeights[this.resizing.index] = newSize;
+            // 行高改变也会影响内容垂直居中
+            this.resizing.table.cells.flat().forEach(cell => {
+              cell.needsRelayout = true;
+              cell.textLayout = null;
+            });
+          }
+          this.render();
+          return;
+        }
+
+        // 检测调整手柄（列/行边界）
+        const handle = this.detectResizeHandle(x, y);
+        if (handle) {
+          this.canvas.style.cursor = handle.type === 'col' ? 'col-resize' : 'row-resize';
+        } else {
+          this.canvas.style.cursor = 'text';
+        }
+
+        if (!this.selection.isSelecting) return;
+        
+        const hit = this.hitTest(x, y);
+        if (hit && hit.type === 'cell') {
+          this.selection.end = hit.cell;
+          this.updateCellSelection();
+          this.render();
+        }
+      }
+
+      detectResizeHandle(x, y) {
+        const threshold = 5;
+        for (let pageIndex = 0; pageIndex < this.document.pages.length; pageIndex++) {
+          const page = this.document.pages[pageIndex];
+          const pageGap = 20;
+          const pageX = 20;
+          const pageY = 10 + (this.document.pageSize.height + pageGap) * pageIndex;
+          
+          for (const element of page.elements) {
+            if (element.type === 'table') {
+              const tableX = pageX + element.x;
+              const tableY = pageY + element.y;
+              const tableWidth = element.colWidths.reduce((a, b) => a + b, 0);
+              const tableHeight = element.rowHeights.reduce((a, b) => a + b, 0);
+
+              // 检测列边界
+              let currentX = tableX;
+              for (let i = 0; i < element.cols - 1; i++) {
+                currentX += element.colWidths[i];
+                if (Math.abs(x - currentX) <= threshold && y >= tableY && y <= tableY + tableHeight) {
+                  return { type: 'col', index: i, table: element, startX: x };
+                }
+              }
+
+              // 检测行边界
+              let currentY = tableY;
+              for (let i = 0; i < element.rows - 1; i++) {
+                currentY += element.rowHeights[i];
+                if (Math.abs(y - currentY) <= threshold && x >= tableX && x <= tableX + tableWidth) {
+                  return { type: 'row', index: i, table: element, startY: y };
+                }
+              }
+            }
+          }
+        }
+        return null;
+      }
+          
+          for (const element of page.elements) {
+            if (element.type === 'table') {
+              const tableX = pageX + element.x;
+              const tableY = pageY + element.y;
+              const tableWidth = element.colWidths.reduce((a, b) => a + b, 0);
+              const tableHeight = element.rowHeights.reduce((a, b) => a + b, 0);
+
+              // 检测列边界
+              let currentX = tableX;
+              for (let i = 0; i < element.cols; i++) {
+                currentX += element.colWidths[i];
+                if (Math.abs(x - currentX) <= threshold && y >= tableY && y <= tableY + tableHeight) {
+                  return { type: 'col', index: i, table: element, startX: x };
+                }
+              }
+
+              // 检测行边界
+              let currentY = tableY;
+              for (let i = 0; i < element.rows; i++) {
+                currentY += element.rowHeights[i];
+                if (Math.abs(y - currentY) <= threshold && x >= tableX && x <= tableX + tableWidth) {
+                  return { type: 'row', index: i, table: element, startY: y };
+                }
+              }
+            }
+          }
+        }
+        return null;
+      }
+      
+      onMouseUp(e) {
+        this.selection.isSelecting = false;
+        if (this.resizing.active) {
+          this.resizing.active = false;
+          this.paginateDocument();
+        }
+        this.updateToolbarState();
+      }
+      
+      onContextMenu(e) {
+        e.preventDefault();
+        
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const hit = this.hitTest(x, y);
+        if (hit && hit.type === 'cell') {
+          const menu = document.getElementById('contextMenu');
+          menu.style.left = e.clientX + 'px';
+          menu.style.top = e.clientY + 'px';
+          menu.classList.add('show');
+        }
+      }
+      
+      onKeyDown(e) {
+        // 处理键盘输入
+        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+          // 输入字符
+          // 简化实现
+        }
+      }
+      
+      hitTest(x, y) {
+        // 遍历所有页面和元素，找到点击位置
+        for (let pageIndex = 0; pageIndex < this.document.pages.length; pageIndex++) {
+          const page = this.document.pages[pageIndex];
+          const pageGap = 20;
+          const pageX = 20;
+          const pageY = 10 + (this.document.pageSize.height + pageGap) * pageIndex;
+          
+          // 检查是否在页面内
+          if (x >= pageX && x <= pageX + this.document.pageSize.width &&
+              y >= pageY && y <= pageY + this.document.pageSize.height) {
+            
+            // 遍历元素
+            for (const element of page.elements) {
+              if (element.type === 'table') {
+                const absX = pageX + element.x;
+                const absY = pageY + element.y;
+                const cell = this.hitTestTable(x, y, element, absX, absY);
+                if (cell) {
+                  return { type: 'cell', cell, table: element, page: pageIndex };
+                }
+              }
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      hitTestTable(x, y, table, tableX, tableY) {
+        const cellRects = this.calculateTableLayout(table);
+        
+        for (const cell of table.cells.flat()) {
+          if (cell.isVirtual) continue;
+          const rect = cellRects[cell.id];
+          const absX = tableX + rect.x;
+          const absY = tableY + rect.y;
+          
+          if (x >= absX && x <= absX + rect.width &&
+              y >= absY && y <= absY + rect.height) {
+            return cell;
+          }
+        }
+        
+        return null;
+      }
+      
+      updateCellSelection() {
+        if (!this.selection.start || !this.selection.end) return;
+        
+        const start = this.selection.start;
+        const end = this.selection.end;
+        
+        const minRow = Math.min(start.row, end.row);
+        const maxRow = Math.max(start.row, end.row);
+        const minCol = Math.min(start.col, end.col);
+        const maxCol = Math.max(start.col, end.col);
+        
+        // 找到所属表格
+        let table = null;
+        for (const page of this.document.pages) {
+          for (const element of page.elements) {
+            if (element.type === 'table') {
+              if (element.cells.flat().some(c => c.id === start.id)) {
+                table = element;
+                break;
+              }
+            }
+          }
+          if (table) break;
+        }
+        
+        if (!table) return;
+        
+        this.selectedCells = [];
+        for (let r = minRow; r <= maxRow; r++) {
+          for (let c = minCol; c <= maxCol; c++) {
+            if (r < table.rows && c < table.cols) {
+              const cell = table.cells[r][c];
+              const realCell = this.getRealCell(table, r, c);
+              if (!this.selectedCells.some(sc => sc.id === realCell.id)) {
+                this.selectedCells.push(realCell);
+              }
+            }
+          }
+        }
+      }
+      
+      getRealCell(table, row, col) {
+        const cell = table.cells[row][col];
+        if (!cell.isVirtual) return cell;
+        
+        // 向上向左查找源头单元格
+        for (let r = row; r >= 0; r--) {
+          for (let c = col; c >= 0; c--) {
+            const parent = table.cells[r][c];
+            if (!parent.isVirtual &&
+                r + parent.rowSpan > row &&
+                c + parent.colSpan > col) {
+              return parent;
+            }
+          }
+        }
+        
+        return cell;
+      }
+      
+      updateToolbarState() {
+        const mergeCellsBtn = document.getElementById('mergeCellsBtn');
+        const splitCellBtn = document.getElementById('splitCellBtn');
+        
+        if (this.selectedCells.length > 1) {
+          mergeCellsBtn.disabled = false;
+          splitCellBtn.disabled = true;
+        } else if (this.selectedCells.length === 1) {
+          const cell = this.selectedCells[0];
+          mergeCellsBtn.disabled = true;
+          splitCellBtn.disabled = !(cell.rowSpan > 1 || cell.colSpan > 1);
+        } else {
+          mergeCellsBtn.disabled = true;
+          splitCellBtn.disabled = true;
+        }
+      }
+    }
+    
+    // ==================== 编辑器主类 ====================
+    
+    class CanvasEditor {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.document = new DocumentData();
+        this.renderer = null;
+        
+        // 初始化示例文档
+        this.initSampleDocument();
+        
+        // 创建渲染器
+        this.renderer = new CanvasEditorRenderer(this.canvas, this.document);
+        this.renderer.render();
+        
+        // 更新状态栏
+        this.updateStatusBar();
+      }
+      
+      initSampleDocument() {
+        // 创建第一页
+        const page1 = new Page(0);
+        
+        // 标题
+        const title = new Paragraph();
+        title.x = this.document.margins.left;
+        title.y = this.document.margins.top;
+        title.width = this.document.pageSize.width - this.document.margins.left - this.document.margins.right;
+        title.textAlign = 'center';
+        title.content = [new TextRun('Canvas 表格编辑器演示', {
+          fontSize: 24,
+          bold: true,
+          fontFamily: 'Microsoft YaHei'
+        })];
+        page1.elements.push(title);
+        
+        // 说明文字
+        const desc = new Paragraph();
+        desc.x = this.document.margins.left;
+        desc.y = this.document.margins.top + 40;
+        desc.width = this.document.pageSize.width - this.document.margins.left - this.document.margins.right;
+        desc.content = [new TextRun('以下表格展示了合并单元格、样式设置和跨页功能', {
+          fontSize: 14,
+          fontFamily: 'Microsoft YaHei'
+        })];
+        page1.elements.push(desc);
+        
+        // 复杂表格（5行×5列）
+        const table1 = new Table(5, 5);
+        table1.x = this.document.margins.left;
+        table1.y = this.document.margins.top + 80;
+        
+        // 计算列宽
+        const availableWidth = this.document.pageSize.width - this.document.margins.left - this.document.margins.right;
+        const colWidth = availableWidth / 5;
+        table1.colWidths = new Array(5).fill(colWidth);
+        
+        // 设置表头
+        table1.hasHeader = true;
+        for (let c = 0; c < 5; c++) {
+          table1.cells[0][c].backgroundColor = '#f0f0f0';
+          table1.cells[0][c].content[0].content[0] = new TextRun(`列${c + 1}`, { bold: true });
+        }
+        
+        // 合并单元格 [0,0] 2行2列
+        table1.cells[0][0].rowSpan = 2;
+        table1.cells[0][0].colSpan = 2;
+        table1.cells[0][0].content[0].content[0] = new TextRun('合并单元格', { bold: true, fontSize: 18 });
+        table1.cells[0][0].backgroundColor = '#e3f2fd';
+        table1.cells[0][1].isVirtual = true;
+        table1.cells[1][0].isVirtual = true;
+        table1.cells[1][1].isVirtual = true;
+        
+        // 横向合并 [0,2] colSpan=3
+        table1.cells[0][2].colSpan = 3;
+        table1.cells[0][2].content[0].content[0] = new TextRun('横向合并', { bold: true });
+        table1.cells[0][2].backgroundColor = '#fff3e0';
+        table1.cells[0][3].isVirtual = true;
+        table1.cells[0][4].isVirtual = true;
+        
+        // 纵向合并 [2,0] rowSpan=3
+        table1.cells[2][0].rowSpan = 3;
+        table1.cells[2][0].content[0].content[0] = new TextRun('纵向合并', { bold: true });
+        table1.cells[2][0].backgroundColor = '#f3e5f5';
+        table1.cells[3][0].isVirtual = true;
+        table1.cells[4][0].isVirtual = true;
+        
+        // 填充其他单元格
+        for (let r = 1; r < 5; r++) {
+          for (let c = 0; c < 5; c++) {
+            if (!table1.cells[r][c].isVirtual && !(r === 2 && c === 0)) {
+              table1.cells[r][c].content[0].content[0] = new TextRun(`R${r + 1}C${c + 1}`);
+            }
+          }
+        }
+        
+        page1.elements.push(table1);
+        
+        // 长表格（15行×3列）用于演示分页
+        const table2 = new Table(15, 3);
+        table2.x = this.document.margins.left;
+        table2.y = this.document.margins.top + 320;
+        
+        const colWidth2 = availableWidth / 3;
+        table2.colWidths = new Array(3).fill(colWidth2);
+        
+        // 填充数据
+        for (let r = 0; r < 15; r++) {
+          for (let c = 0; c < 3; c++) {
+            table2.cells[r][c].content[0].content[0] = new TextRun(`行${r + 1}列${c + 1}`);
+          }
+        }
+        
+        page1.elements.push(table2);
+        
+        this.document.pages.push(page1);
+        
+        // 执行分页
+        this.paginateDocument();
+      }
+      
+      paginateDocument() {
+        // 简化：检查元素是否超出页面，如果超出则创建新页
+        const maxContentHeight = this.document.pageSize.height - this.document.margins.top - this.document.margins.bottom;
+        
+        let currentPage = this.document.pages[0];
+        let currentY = 0;
+        
+        const newPages = [currentPage];
+        
+        for (let i = 0; i < currentPage.elements.length; i++) {
+          const element = currentPage.elements[i];
+          
+          if (element.type === 'table') {
+            const tableHeight = element.rowHeights.reduce((sum, h) => sum + h, 0);
+            
+            if (currentY + tableHeight > maxContentHeight) {
+              // 需要分页
+              const newPage = new Page(newPages.length);
+              newPage.elements.push(element);
+              element.y = this.document.margins.top;
+              newPages.push(newPage);
+              currentY = tableHeight;
+            } else {
+              currentY += tableHeight + 20;
+            }
+          } else {
+            currentY += element.height || 30;
+          }
+        }
+        
+        this.document.pages = newPages;
+      }
+      
+      insertTable(rows, cols) {
+        const table = new Table(rows, cols);
+        
+        // 计算列宽
+        const availableWidth = this.document.pageSize.width - this.document.margins.left - this.document.margins.right;
+        const colWidth = availableWidth / cols;
+        table.colWidths = new Array(cols).fill(colWidth);
+        
+        // 添加到当前页
+        const currentPage = this.document.pages[this.renderer.currentPage] || this.document.pages[0];
+        table.x = this.document.margins.left;
+        table.y = this.document.margins.top + (currentPage.elements.length * 100);
+        
+        currentPage.elements.push(table);
+        
+        this.renderer.updateCanvasSize();
+        this.renderer.render();
+        this.updateStatusBar();
+        
+        console.log(`插入表格: ${rows}行 × ${cols}列`);
+      }
+      
+      mergeCells() {
+        if (this.renderer.selectedCells.length < 2) {
+          alert('请选择至少2个单元格');
+          return;
+        }
+        
+        // 找到所属表格
+        let table = null;
+        for (const page of this.document.pages) {
+          for (const element of page.elements) {
+            if (element.type === 'table') {
+              if (element.cells.flat().some(c => c.id === this.renderer.selectedCells[0].id)) {
+                table = element;
+                break;
+              }
+            }
+          }
+          if (table) break;
+        }
+        
+        if (!table) return;
+        
+        // 验证选区是否为矩形
+        const rows = this.renderer.selectedCells.map(c => c.row);
+        const cols = this.renderer.selectedCells.map(c => c.col);
+        const minRow = Math.min(...rows);
+        const maxRow = Math.max(...rows);
+        const minCol = Math.min(...cols);
+        const maxCol = Math.max(...cols);
+        
+        const expectedCount = (maxRow - minRow + 1) * (maxCol - minCol + 1);
+        if (this.renderer.selectedCells.length !== expectedCount) {
+          alert('选区必须是矩形');
+          return;
+        }
+
+        this.mergeCellsSafe(table, this.renderer.selectedCells);
+      }
+
+      /**
+       * 安全的合并单元格函数 - 修复高度缩小 Bug
+       * @param {Table} table - 表格对象
+       * @param {TableCell[]} selectedCells - 选中的单元格数组
+       */
+      mergeCellsSafe(table, selectedCells) {
+        if (selectedCells.length < 2) return;
+
+        // 1. 计算选区边界
+        const rows = selectedCells.map(c => c.row);
+        const cols = selectedCells.map(c => c.col);
+        const minRow = Math.min(...rows);
+        const maxRow = Math.max(...rows);
+        const minCol = Math.min(...cols);
+        const maxCol = Math.max(...cols);
+
+        // 2. 获取主单元格（左上角）
+        const masterCell = table.cells[minRow][minCol];
+
+        // 3. 【关键】保存合并前的行高快照，用于后续比较
+        const originalRowHeights = [...table.rowHeights];
+
+        // 4. 收集所有内容并计算需要的高度
+        const allParagraphs = [];
+        let totalRequiredHeight = 0;
+
+        // 计算所有合并单元格的总内容高度（简单累加用于演示）
+        selectedCells.forEach(cell => {
+          const cellHeight = this.calculateCellContentHeight(cell);
+          // 只有原本可见的内容才参与合并计算
+          if (cell.content && cell.content.length > 0) {
+            allParagraphs.push(...cell.content);
+          }
+        });
+
+        // 5. 合并内容到主单元格
+        // 过滤空段落，除非只有一个空段落
+        masterCell.content = allParagraphs.filter(p => {
+          return p.content && p.content.length > 0 && p.content[0].text !== '';
+        });
+        if (masterCell.content.length === 0) {
+          const emptyPara = new Paragraph();
+          emptyPara.content.push(new TextRun(''));
+          masterCell.content.push(emptyPara);
+        }
+
+        // 重新计算合并后主单元格需要的高度
+        const masterRequiredHeight = this.calculateCellContentHeight(masterCell);
+        
+        masterCell.rowSpan = maxRow - minRow + 1;
+        masterCell.colSpan = maxCol - minCol + 1;
+
+        // 6. 【关键修复】计算合并后的单元格所需平均高度并分摊到各行
+        // 如果是跨多行合并，平均分配高度
+        const avgNeededHeight = masterRequiredHeight / masterCell.rowSpan;
+
+        // 7. 【关键修复】更新行高 - 取最大值，确保不缩小
+        for (let r = minRow; r <= maxRow; r++) {
+          const originalHeight = originalRowHeights[r];
+          // ❗ 关键：取最大值，绝不缩小。40px 兜底。
+          table.rowHeights[r] = Math.max(originalHeight, avgNeededHeight, 40);
+          
+          console.log(`行 ${r}: 原高 ${originalHeight}px, 内容需要 ${avgNeededHeight}px, 最终 ${table.rowHeights[r]}px`);
+        }
+
+        // 8. 标记其他单元格为虚拟单元格
+        for (let r = minRow; r <= maxRow; r++) {
+          for (let c = minCol; c <= maxCol; c++) {
+            if (r === minRow && c === minCol) continue;
+            table.cells[r][c].isVirtual = true;
+          }
+        }
+
+        this.renderer.selectedCells = [masterCell];
+        this.renderer.render();
+        this.renderer.updateToolbarState();
+        
+        console.log('合并单元格完成');
+      }
+
+      /**
+       * 计算单元格内容的实际高度（包括多行文本）
+       */
+      calculateCellContentHeight(cell) {
+        if (!cell.content || cell.content.length === 0) return 0;
+        
+        let totalHeight = 0;
+        cell.content.forEach(para => {
+          // 模拟文本换行计算（简化版：假设每 20 个字符换行，或按段落换行）
+          let lineCount = 1;
+          const text = para.content.map(run => run.text).join('');
+          // 假设单元格宽度平均分给各列（简化）
+          const availableWidth = cell.width || 100; 
+          // 粗略估算行数：这里简单用文字长度/30作为演示，实际渲染中应使用 measureText
+          lineCount = Math.max(1, Math.ceil(text.length / 30));
+          totalHeight += lineCount * para.lineHeight;
+        });
+        
+        return totalHeight + cell.padding.top + cell.padding.bottom;
+      }
+      
+      splitCell() {
+        if (this.renderer.selectedCells.length !== 1) {
+          alert('请选择一个单元格');
+          return;
+        }
+        
+        const cell = this.renderer.selectedCells[0];
+        if (cell.rowSpan === 1 && cell.colSpan === 1) {
+          alert('该单元格未合并');
+          return;
+        }
+        
+        // 找到所属表格
+        let table = null;
+        for (const page of this.document.pages) {
+          for (const element of page.elements) {
+            if (element.type === 'table') {
+              if (element.cells.flat().some(c => c.id === cell.id)) {
+                table = element;
+                break;
+              }
+            }
+          }
+          if (table) break;
+        }
+        
+        if (!table) return;
+        
+        // 恢复虚拟单元格
+        for (let r = cell.row; r < cell.row + cell.rowSpan; r++) {
+          for (let c = cell.col; c < cell.col + cell.colSpan; c++) {
+            table.cells[r][c].isVirtual = false;
+            table.cells[r][c].rowSpan = 1;
+            table.cells[r][c].colSpan = 1;
+            if (r !== cell.row || c !== cell.col) {
+              table.cells[r][c].content = [new Paragraph()];
+              table.cells[r][c].content[0].content = [new TextRun('')];
+            }
+          }
+        }
+        
+        cell.rowSpan = 1;
+        cell.colSpan = 1;
+        
+        this.renderer.selectedCells = [];
+        this.renderer.render();
+        this.renderer.updateToolbarState();
+        
+        console.log('拆分单元格完成');
+      }
+      
+      insertRowAbove() {
+        // 简化实现
+        console.log('在上方插入行');
+      }
+      
+      insertRowBelow() {
+        console.log('在下方插入行');
+      }
+      
+      insertColLeft() {
+        console.log('在左侧插入列');
+      }
+      
+      insertColRight() {
+        console.log('在右侧插入列');
+      }
+      
+      deleteRow() {
+        console.log('删除行');
+      }
+      
+      deleteCol() {
+        console.log('删除列');
+      }
+      
+      deleteTable() {
+        console.log('删除表格');
+      }
+      
+      newDocument() {
+        if (confirm('确定要新建文档吗？未保存的内容将丢失。')) {
+          this.document = new DocumentData();
+          this.initSampleDocument();
+          this.renderer.document = this.document;
+          this.renderer.updateCanvasSize();
+          this.renderer.render();
+          this.updateStatusBar();
+        }
+      }
+      
+      openDocument() {
+        alert('打开文档功能待实现');
+      }
+      
+      saveDocument() {
+        const json = JSON.stringify(this.document, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'document.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        console.log('文档已保存');
+      }
+      
+      exportMarkdown() {
+        const markdown = this.convertToMarkdown();
+        const blob = new Blob([markdown], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'document.md';
+        a.click();
+        URL.revokeObjectURL(url);
+        console.log('Markdown 文档已导出');
+      }
+
+      convertToMarkdown() {
+        let md = '';
+        this.document.pages.forEach(page => {
+          page.elements.forEach(element => {
+            if (element.type === 'paragraph') {
+              md += this.paragraphToMarkdown(element) + '\n\n';
+            } else if (element.type === 'table') {
+              md += this.tableToMarkdown(element) + '\n\n';
+            }
+          });
+        });
+        return md.trim();
+      }
+
+      paragraphToMarkdown(para) {
+        let text = '';
+        para.content.forEach(run => {
+          let runText = run.text || '';
+          if (!runText) return;
+          if (run.bold) runText = '**' + runText + '**';
+          if (run.italic) runText = '*' + runText + '*';
+          if (run.underline) runText = '<u>' + runText + '</u>';
+          text += runText;
+        });
+
+        if (!text) return '';
+
+        // 处理对齐
+        if (para.textAlign === 'center') {
+          return '<center>' + text + '</center>';
+        } else if (para.textAlign === 'right') {
+          return '<div align="right">' + text + '</div>';
+        }
+        return text;
+      }
+
+      tableToMarkdown(table) {
+        let md = '';
+        const rows = table.rows;
+        const cols = table.cols;
+
+        if (rows === 0) return '';
+
+        // 尝试构建 Markdown 表格
+        // Markdown 表格限制较多，这里做一个基础转换
+        let headerRow = '|';
+        let dividerRow = '|';
+        
+        // 第一行作为表头
+        for (let c = 0; c < cols; c++) {
+          const cell = table.cells[0][c];
+          // 如果是虚拟单元格（被合并的），则显示为空
+          const cellText = cell.isVirtual ? '' : this.cellToText(cell).replace(/\|/g, '\\|');
+          headerRow += ` ${cellText || ' '} |`;
+          dividerRow += ' --- |';
+        }
+        md += headerRow + '\n' + dividerRow + '\n';
+
+        // 内容行
+        for (let r = 1; r < rows; r++) {
+          let rowStr = '|';
+          for (let c = 0; c < cols; c++) {
+            const cell = table.cells[r][c];
+            if (cell.isVirtual) {
+              rowStr += '  |'; // Markdown 不原生支持合并单元格，留空
+            } else {
+              const cellText = this.cellToText(cell).replace(/\|/g, '\\|');
+              rowStr += ` ${cellText || ' '} |`;
+            }
+          }
+          md += rowStr + '\n';
+        }
+        return md;
+      }
+
+      cellToText(cell) {
+        if (!cell.content || cell.content.length === 0) return '';
+        return cell.content.map(para => this.paragraphToMarkdown(para)).join(' ').trim();
+      }
+      
+      setFontFamily(fontFamily) {
+        console.log('设置字体:', fontFamily);
+      }
+      
+      setFontSize(fontSize) {
+        console.log('设置字号:', fontSize);
+      }
+      
+      toggleBold() {
+        console.log('切换加粗');
+      }
+      
+      toggleItalic() {
+        console.log('切换斜体');
+      }
+      
+      toggleUnderline() {
+        console.log('切换下划线');
+      }
+      
+      setTextColor(color) {
+        console.log('设置文字颜色:', color);
+      }
+      
+      setBackgroundColor(color) {
+        console.log('设置背景颜色:', color);
+      }
+      
+      setAlign(align) {
+        console.log('设置对齐:', align);
+      }
+      
+      updateStatusBar() {
+        document.getElementById('pageNum').textContent = this.renderer.currentPage + 1;
+        document.getElementById('pageTotal').textContent = this.document.pages.length;
+        
+        // 计算字数
+        let wordCount = 0;
+        this.document.pages.forEach(page => {
+          page.elements.forEach(element => {
+            if (element.type === 'paragraph') {
+              element.content.forEach(run => {
+                wordCount += run.text.length;
+              });
+            } else if (element.type === 'table') {
+              element.cells.flat().forEach(cell => {
+                cell.content.forEach(para => {
+                  para.content.forEach(run => {
+                    wordCount += run.text.length;
+                  });
+                });
+              });
+            }
+          });
+        });
+        
+        document.getElementById('wordCount').textContent = wordCount + ' 字';
+      }
+    }
+    
+    // ==================== 表格网格选择器 ====================
+    
+    function initTableGridSelector() {
+      const container = document.getElementById('gridContainer');
+      const label = document.getElementById('gridLabel');
+      
+      // 创建 8x8 网格
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'grid-cell';
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          
+          cell.addEventListener('mouseenter', function() {
+            const row = parseInt(this.dataset.row);
+            const col = parseInt(this.dataset.col);
+            
+            // 高亮从 0,0 到当前单元格的矩形区域
+            const allCells = container.querySelectorAll('.grid-cell');
+            allCells.forEach(gc => {
+              const gr = parseInt(gc.dataset.row);
+              const gc_col = parseInt(gc.dataset.col);
+              if (gr <= row && gc_col <= col) {
+                gc.classList.add('hover');
+              } else {
+                gc.classList.remove('hover');
+              }
+            });
+            
+            label.textContent = `${row + 1} x ${col + 1}`;
+          });
+          
+          cell.addEventListener('click', function() {
+            const row = parseInt(this.dataset.row) + 1;
+            const col = parseInt(this.dataset.col) + 1;
+            editor.insertTable(row, col);
+            toggleTableGrid();
+          });
+          
+          container.appendChild(cell);
+        }
+      }
+    }
+    
+    function toggleTableGrid() {
+      const selector = document.getElementById('tableGridSelector');
+      selector.classList.toggle('show');
+    }
+    
+    // ==================== 测试套件 ====================
+    
+    function runBugFixTests() {
+      console.log('--- 启动 Bug 修复验证测试 ---');
+      
+      // 测试 1：有内容合并（Bug 场景）
+      (function testContentMergeHeight() {
+        console.log('测试 1: 有内容合并且高度不应缩小...');
+        const doc = new DocumentData();
+        const page = new Page(0);
+        const table = new Table(3, 3);
+        table.rowHeights = [40, 40, 40];
+        
+        // 在 [0,0] 模拟 3 行文字 (约 80px 需要的高度)
+        table.cells[0][0].content = [new Paragraph()];
+        // 假装它是长文本
+        table.cells[0][0].content[0].content = [new TextRun('这是一段非常长长长长长长长长长长长长长长长长长长长长长长长长长长的文字')];
+        
+        const originalHeight = table.rowHeights[0];
+        const cellsToMerge = [table.cells[0][0], table.cells[0][1]];
+        
+        // 执行安全合并
+        const dummyEditor = new CanvasEditor('editor-canvas'); // 创建实例以调用方法
+        dummyEditor.document = doc;
+        dummyEditor.mergeCellsSafe(table, cellsToMerge);
+        
+        const newHeight = table.rowHeights[0];
+        if (newHeight >= originalHeight) {
+          console.log('✅ 测试 1 通过: 合并后行高 ' + newHeight + 'px (未缩小)');
+        } else {
+          console.error('❌ 测试 1 失败: 合并后行高 ' + newHeight + 'px (缩小了！)');
+        }
+      })();
+      
+      console.log('--- 测试结束 ---');
+    }
+    
+    // 点击其他地方关闭网格选择器
+    document.addEventListener('click', function(e) {
+      const selector = document.getElementById('tableGridSelector');
+      const btn = document.getElementById('insertTableBtn');
+      if (!selector.contains(e.target) && e.target !== btn) {
+        selector.classList.remove('show');
+      }
+      
+      const menu = document.getElementById('contextMenu');
+      if (!menu.contains(e.target)) {
+        menu.classList.remove('show');
+      }
+    });
+    
+    // ==================== 初始化 ====================
+    
+    let editor;
+    
+    window.addEventListener('DOMContentLoaded', function() {
+      console.log('Canvas Word 编辑器初始化...');
+      
+      // 初始化表格网格选择器
+      initTableGridSelector();
+      
+      // 创建编辑器实例
+      editor = new CanvasEditor('editor-canvas');
+      
+      console.log('编辑器初始化完成');
+      console.log('当前文档:', editor.document);
+      
+      // 运行测试
+      runBugFixTests();
+    });
+  </script>
+</body>
+</html>

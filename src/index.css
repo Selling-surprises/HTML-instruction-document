@@ -1,0 +1,557 @@
+/* stylelint-disable */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+    
+    /* 主色调：现代蓝紫渐变 */
+    --primary: 250 84% 64%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 260 84% 70%;
+    --primary-dark: 245 70% 55%;
+    
+    /* 辅助色：活力紫色 */
+    --secondary: 280 65% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-glow: 285 70% 70%;
+    
+    /* 强调色：青色 */
+    --accent: 190 95% 92%;
+    --accent-foreground: 190 95% 45%;
+    --accent-vibrant: 190 95% 55%;
+    
+    /* 背景系统 */
+    --background: 240 20% 99%;
+    --background-end: 250 25% 97%;
+    --foreground: 240 10% 15%;
+    
+    /* 卡片和面板 */
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 15%;
+    
+    /* 中性色 */
+    --muted: 240 10% 96%;
+    --muted-foreground: 240 5% 50%;
+    --muted-hover: 240 10% 93%;
+    
+    /* 状态色 */
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --info: 210 95% 60%;
+    --info-foreground: 0 0% 100%;
+    
+    /* 边框和输入 */
+    --border: 240 10% 90%;
+    --border-hover: 240 10% 80%;
+    --input: 240 10% 95%;
+    --ring: 250 84% 64%;
+    
+    /* 阴影系统 */
+    --shadow-sm: 0 2px 8px -2px hsl(240 10% 15% / 0.08);
+    --shadow-md: 0 4px 16px -4px hsl(240 10% 15% / 0.12);
+    --shadow-lg: 0 8px 32px -8px hsl(240 10% 15% / 0.16);
+    --shadow-xl: 0 16px 48px -12px hsl(240 10% 15% / 0.2);
+    --shadow-glow: 0 0 40px hsl(250 84% 64% / 0.3);
+    --shadow-glow-hover: 0 0 60px hsl(250 84% 64% / 0.4);
+    
+    /* 渐变系统 */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--secondary-glow)) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent-vibrant)) 0%, hsl(var(--primary)) 100%);
+    --gradient-bg: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--background-end)) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+    
+    /* 过渡动画 */
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .dark {
+    --primary: 250 84% 70%;
+    --primary-foreground: 240 10% 10%;
+    --primary-glow: 260 84% 75%;
+    --primary-dark: 245 70% 60%;
+    
+    --secondary: 280 65% 65%;
+    --secondary-foreground: 240 10% 10%;
+    --secondary-glow: 285 70% 75%;
+    
+    --accent: 190 95% 20%;
+    --accent-foreground: 190 95% 70%;
+    --accent-vibrant: 190 95% 60%;
+    
+    --background: 240 10% 8%;
+    --background-end: 250 10% 12%;
+    --foreground: 240 10% 95%;
+    
+    --card: 240 10% 12%;
+    --card-foreground: 240 10% 95%;
+    --popover: 240 10% 12%;
+    --popover-foreground: 240 10% 95%;
+    
+    --muted: 240 10% 18%;
+    --muted-foreground: 240 5% 60%;
+    --muted-hover: 240 10% 22%;
+    
+    --success: 142 76% 50%;
+    --warning: 38 92% 60%;
+    --destructive: 0 84% 65%;
+    --info: 210 95% 65%;
+    
+    --border: 240 10% 20%;
+    --border-hover: 240 10% 30%;
+    --input: 240 10% 18%;
+    --ring: 250 84% 70%;
+    
+    --shadow-sm: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
+    --shadow-lg: 0 8px 32px -8px hsl(0 0% 0% / 0.5);
+    --shadow-xl: 0 16px 48px -12px hsl(0 0% 0% / 0.6);
+    --shadow-glow: 0 0 40px hsl(250 84% 70% / 0.4);
+    --shadow-glow-hover: 0 0 60px hsl(250 84% 70% / 0.5);
+    
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* 渐变文字 */
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  
+  .gradient-text-secondary {
+    background: var(--gradient-secondary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  
+  .gradient-text-accent {
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  
+  /* 渐变背景 */
+  .gradient-bg {
+    background: var(--gradient-bg);
+  }
+  
+  .gradient-primary-bg {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-secondary-bg {
+    background: var(--gradient-secondary);
+  }
+  
+  .gradient-accent-bg {
+    background: var(--gradient-accent);
+  }
+  
+  /* 玻璃态效果 */
+  .glass-effect {
+    background: var(--gradient-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+  
+  .glass-effect-strong {
+    background: var(--gradient-glass);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid hsl(var(--border) / 0.8);
+  }
+  
+  /* 阴影系统 */
+  .shadow-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .shadow-md {
+    box-shadow: var(--shadow-md);
+  }
+  
+  .shadow-lg {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .shadow-xl {
+    box-shadow: var(--shadow-xl);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .shadow-glow-hover:hover {
+    box-shadow: var(--shadow-glow-hover);
+  }
+  
+  /* 过渡动画 */
+  .transition-fast {
+    transition: var(--transition-fast);
+  }
+  
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .transition-slow {
+    transition: var(--transition-slow);
+  }
+  
+  .transition-bounce {
+    transition: var(--transition-bounce);
+  }
+  
+  /* 悬浮效果 */
+  .hover-lift {
+    transition: var(--transition-smooth);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+/* 代码块滚动条全局美化 */
+.code-block-wrapper pre::-webkit-scrollbar,
+.code-preview-scrollbar pre::-webkit-scrollbar,
+.code-preview-scrollbar::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.code-block-wrapper pre::-webkit-scrollbar-track,
+.code-preview-scrollbar pre::-webkit-scrollbar-track,
+.code-preview-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-block-wrapper pre::-webkit-scrollbar-thumb,
+.code-preview-scrollbar pre::-webkit-scrollbar-thumb,
+.code-preview-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 10px;
+}
+
+.code-block-wrapper pre::-webkit-scrollbar-thumb:hover,
+.code-preview-scrollbar pre::-webkit-scrollbar-thumb:hover,
+.code-preview-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.5);
+}
+
+  
+  .hover-scale {
+    transition: var(--transition-smooth);
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+  
+  /* 移动端优化 */
+  @media (max-width: 768px) {
+    .mobile-hidden {
+      display: none !important;
+    }
+    
+    .mobile-full {
+      width: 100% !important;
+    }
+    
+    .mobile-p-4 {
+      padding: 1rem !important;
+    }
+    
+    .mobile-text-sm {
+      font-size: 0.875rem !important;
+    }
+  }
+  
+  /* 触摸优化 */
+  @media (hover: none) and (pointer: coarse) {
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+}
+
+/* 编辑器内表格样式 */
+@layer components {
+  .editor-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.2em 0;
+    background: hsl(var(--card)) !important;
+    box-shadow: var(--shadow-md);
+    table-layout: fixed;
+    opacity: 1 !important;
+    position: relative;
+    z-index: 1;
+    /* 移除圆角，保持表格边缘线完整 */
+    border-radius: 0;
+    overflow: visible;
+    transition: var(--transition-smooth);
+  }
+  
+  .editor-content table:hover {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .editor-content table td,
+  .editor-content table th {
+    border: 1px solid hsl(var(--border));
+    padding: 16px 20px;
+    width: 150px;
+    max-width: 150px;
+    min-height: 1.5em; /* 确保空单元格有最小高度 */
+    overflow-wrap: break-word;
+    word-break: break-all;
+    text-align: left;
+    vertical-align: top;
+    cursor: text;
+    box-sizing: border-box;
+    line-height: 1.6;
+    background: hsl(var(--card)) !important;
+    opacity: 1 !important;
+    transition: var(--transition-fast);
+  }
+  
+  .editor-content table th {
+    background: var(--gradient-primary) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+  }
+  
+  .editor-content table tr:nth-child(even) td {
+    background: hsl(var(--muted) / 0.3) !important;
+  }
+  
+  .editor-content table tr:hover td {
+    background: hsl(var(--accent)) !important;
+  }
+  
+  /* 表格单元格选中状态 */
+  .editor-content table td.selected,
+  .editor-content table th.selected {
+    background: hsl(var(--primary) / 0.15) !important;
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: -2px;
+    box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.3);
+  }
+  
+  /* 移动端表格优化 */
+  @media (max-width: 768px) {
+    .editor-content table {
+      font-size: 0.875rem;
+      margin: 1em 0;
+    }
+    
+    .editor-content table td,
+    .editor-content table th {
+      padding: 12px 14px;
+      min-width: 100px;
+    }
+  }
+
+  /* 链接卡片样式 */
+  .editor-content .link-card {
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) * 1.5);
+    padding: 20px;
+    margin: 20px 0;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-decoration: none;
+    color: inherit;
+    transition: var(--transition-smooth);
+    cursor: pointer;
+    background: hsl(var(--card));
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .editor-content .link-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: var(--transition-smooth);
+  }
+  
+  .editor-content .link-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+    border-color: hsl(var(--primary) / 0.5);
+  }
+  
+  .editor-content .link-card:hover::before {
+    opacity: 1;
+  }
+
+  .editor-content .link-card .card-content {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  
+  .editor-content .link-card img {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .editor-content .link-card:hover img {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+  }
+  
+  @media (max-width: 768px) {
+    .editor-content .link-card {
+      padding: 16px;
+      margin: 16px 0;
+      border-radius: var(--radius);
+    }
+    
+    .editor-content .link-card .card-content {
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .editor-content .link-card img {
+      width: 100%;
+      height: 180px;
+    }
+  }
+  
+  /* 代码块美化 */
+  .editor-content pre {
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    margin: 1.5em 0;
+    overflow: hidden;
+  }
+  
+  .editor-content pre code {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  
+  /* 图片美化 */
+  .editor-content img {
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-smooth);
+  }
+  
+  .editor-content img:hover {
+    box-shadow: var(--shadow-lg);
+    transform: scale(1.02);
+  }
+  
+  /* 引用块美化 */
+  .editor-content blockquote {
+    border-left: 4px solid hsl(var(--primary));
+    padding: 16px 20px;
+    margin: 1.5em 0;
+    background: hsl(var(--muted) / 0.5);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-style: italic;
+    color: hsl(var(--muted-foreground));
+  }
+  
+  /* 列表美化 */
+  .editor-content ul,
+  .editor-content ol {
+    padding-left: 2em;
+    margin: 1em 0;
+  }
+  
+  .editor-content li {
+    margin: 0.5em 0;
+    line-height: 1.8;
+  }
+  
+  .editor-content ul li::marker {
+    color: hsl(var(--primary));
+  }
+  
+  .editor-content ol li::marker {
+    color: hsl(var(--primary));
+    font-weight: 600;
+  }
+  
+  /* 表格选中单元格样式 */
+  .editor-content table td.selected,
+  .editor-content table th.selected {
+    background-color: hsl(var(--primary) / 0.15) !important;
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: -2px;
+  }
+  
+  /* 右键菜单样式增强 */
+  .word-context-menu {
+    animation: menuFadeIn 0.15s ease-out;
+  }
+  
+  @keyframes menuFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

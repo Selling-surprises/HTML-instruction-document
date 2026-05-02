@@ -1,0 +1,11 @@
+{
+  "version": "5.1.0",
+  "content": "<h1>欢迎使用离线富文本编辑器</h1><p>这是一个示例文档，展示了编辑器的各种功能。</p><h2>主要特性</h2><ul><li>支持富文本编辑</li><li>支持表格插入和编辑</li><li>支持链接插入</li><li>支持JSON导入导出</li></ul><h2>示例表格</h2><table style=\"border-collapse: collapse; width: 100%; border: 2px solid #333;\"><tbody><tr><td style=\"border: 2px solid #333; padding: 8px;\">姓名</td><td style=\"border: 2px solid #333; padding: 8px;\">年龄</td><td style=\"border: 2px solid #333; padding: 8px;\">职业</td></tr><tr><td style=\"border: 2px solid #333; padding: 8px;\">张三</td><td style=\"border: 2px solid #333; padding: 8px;\">25</td><td style=\"border: 2px solid #333; padding: 8px;\">工程师</td></tr><tr><td style=\"border: 2px solid #333; padding: 8px;\">李四</td><td style=\"border: 2px solid #333; padding: 8px;\">30</td><td style=\"border: 2px solid #333; padding: 8px;\">设计师</td></tr></tbody></table><p><br></p><p>访问 <a href=\"https://example.com\" target=\"_blank\">示例网站</a> 了解更多信息。</p>",
+  "settings": {
+    "pageTitle": "示例文档",
+    "favicon": "",
+    "backgroundImage": "",
+    "opacity": 90
+  },
+  "exportDate": "2025-12-06T00:00:00.000Z"
+}
