@@ -140,6 +140,29 @@ import {
 
 const MAX_HISTORY = 50;
 
+// 颜色转换助手：将十六进制颜色转换为rgba
+const hexToRgba = (hex: string, opacity: number): string => {
+  if (!hex) return `rgba(248, 250, 252, ${opacity / 100})`;
+  let r = 0, g = 0, b = 0;
+  // 去掉开头的#
+  const cleanHex = hex.replace('#', '');
+  if (cleanHex.length === 3) {
+    r = parseInt(cleanHex[0] + cleanHex[0], 16);
+    g = parseInt(cleanHex[1] + cleanHex[1], 16);
+    b = parseInt(cleanHex[2] + cleanHex[2], 16);
+  } else if (cleanHex.length === 6) {
+    r = parseInt(cleanHex.substring(0, 2), 16);
+    g = parseInt(cleanHex.substring(2, 4), 16);
+    b = parseInt(cleanHex.substring(4, 6), 16);
+  } else {
+    // 处理可能传入的非十六进制颜色（如transparent或rgba）
+    if (hex.startsWith('rgba') || hex.startsWith('rgb')) return hex;
+    return `rgba(248, 250, 252, ${opacity / 100})`;
+  }
+  return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`;
+};
+
+
 export default function Editor() {
   const { toast } = useToast();
   const editorRef = useRef<EditorContentRef>(null);
@@ -1878,7 +1901,7 @@ export default function Editor() {
     console.log('=== 开始导出 (多页面) ===');
     
     const useBlackMask = settings.useBlackMask;
-    const sidebarBackgroundColor = settings.sidebarBackgroundColor || (useBlackMask ? '#1e1e1e' : '#f8fafc');
+    const sidebarBackgroundColor = hexToRgba(settings.sidebarBackgroundColor || (useBlackMask ? '#1e1e1e' : '#f8fafc'), settings.opacity);
     const sidebarTextColor = useBlackMask ? '#e5e7eb' : '#1e293b';
 
     // 处理所有页面内容
@@ -3824,7 +3847,17 @@ export default function Editor() {
                 <Menu className="h-3.5 w-3.5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] sm:w-[320px] p-0">
+            <SheetContent 
+              side="left" 
+              className="w-[280px] sm:w-[320px] p-0"
+              style={{
+                background: settings.enableGlassEffect 
+                  ? 'transparent' 
+                  : hexToRgba(settings.sidebarBackgroundColor || (settings.useBlackMask ? '#1e1e1e' : '#f8fafc'), settings.opacity),
+                backdropFilter: settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : 'none',
+                WebkitBackdropFilter: settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : 'none'
+              }}
+            >
               <TableOfContents
                 pages={pages}
                 onPageClick={(id) => {
@@ -3839,6 +3872,7 @@ export default function Editor() {
                 onMovePage={handleMovePage}
                 isCollapsed={false}
                 side="left"
+                useBlackMask={settings.useBlackMask}
               />
             </SheetContent>
           </Sheet>
@@ -3931,7 +3965,7 @@ export default function Editor() {
             width: tocCollapsed ? 28 : tocWidth,
             background: settings.enableGlassEffect 
               ? 'transparent' 
-              : (settings.sidebarBackgroundColor || (settings.useBlackMask ? '#1e1e1e' : '#f8fafc')),
+              : hexToRgba(settings.sidebarBackgroundColor || (settings.useBlackMask ? '#1e1e1e' : '#f8fafc'), settings.opacity),
             color: settings.useBlackMask ? '#e5e7eb' : '#1e293b',
             backdropFilter: settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : 'none',
             WebkitBackdropFilter: settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : 'none'
@@ -3988,6 +4022,7 @@ export default function Editor() {
               opacity={settings.opacity}
               headerAlignWithPaper={true}
               titleColor={settings.pageTitleColor}
+              useBlackMask={settings.useBlackMask}
             />
           </div>
         </div>
@@ -4013,7 +4048,9 @@ export default function Editor() {
               <div 
                 className="px-3 md:px-10 h-[56px] flex items-center border-b border-border shrink-0"
                 style={{
-                  background: `rgba(248, 250, 252, ${settings.opacity / 100})`,
+                  background: settings.useBlackMask 
+                    ? `rgba(30, 30, 30, ${settings.opacity / 100})`
+                    : `rgba(248, 250, 252, ${settings.opacity / 100})`,
                   backdropFilter: settings.opacity < 100 ? 'blur(8px)' : 'none'
                 }}
               >

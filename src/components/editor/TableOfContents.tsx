@@ -38,6 +38,7 @@ interface TableOfContentsProps {
   opacity?: number;
   headerAlignWithPaper?: boolean;
   titleColor?: string;
+  useBlackMask?: boolean;
 }
 
 export function TableOfContents({
@@ -56,6 +57,7 @@ export function TableOfContents({
   opacity = 100,
   headerAlignWithPaper = false,
   titleColor,
+  useBlackMask = false,
 }: TableOfContentsProps) {
   // 记录节点的展开/折叠状态，默认全部展开
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
@@ -190,8 +192,8 @@ export function TableOfContents({
                 onDrop={(e) => handleDrop(e, page.id, e.currentTarget as HTMLElement)}
                 className={`group flex items-center pr-2 cursor-pointer transition-colors select-none ${
                   isDragging ? 'opacity-40' : ''
-                } ${showChild ? 'bg-[#dbeafe] ring-1 ring-inset ring-[#2B579A]' : ''} ${
-                  isActive && !showChild ? 'bg-[#eff6ff] text-[#1e40af]' : !showChild ? 'hover:bg-[#f1f5f9]' : 'text-[#1e40af]'
+                } ${showChild ? (useBlackMask ? 'bg-blue-900/30 ring-1 ring-inset ring-blue-500' : 'bg-[#dbeafe] ring-1 ring-inset ring-[#2B579A]') : ''} ${
+                  isActive && !showChild ? (useBlackMask ? 'bg-blue-900/40 text-blue-200' : 'bg-[#eff6ff] text-[#1e40af]') : !showChild ? (useBlackMask ? 'hover:bg-white/5' : 'hover:bg-[#f1f5f9]') : (useBlackMask ? 'text-blue-300' : 'text-[#1e40af]')
                 }`}
                 style={{
                   paddingLeft: indentPx,
@@ -199,7 +201,7 @@ export function TableOfContents({
                   paddingBottom: 9,
                   borderLeft: isActive && !showChild ? '3px solid #2B579A' : showChild ? '3px solid #2B579A' : '3px solid transparent',
                   cursor: isDragging ? 'grabbing' : 'pointer',
-                  color: page.titleColor || titleColor
+                  color: page.titleColor || titleColor || (useBlackMask ? '#e5e7eb' : '#1e293b')
                 }}
                 onClick={() => !isDragging && onPageClick(page.id)}
               >
@@ -222,7 +224,7 @@ export function TableOfContents({
                   className={`flex-1 whitespace-nowrap ml-1.5 mr-1 text-sm ${level === 0 ? 'font-semibold' : 'font-normal'}`}
                   style={{ 
                     fontSize: 14,
-                    color: page.titleColor || titleColor || '#1e293b'
+                    color: page.titleColor || titleColor || (useBlackMask ? '#e5e7eb' : '#1e293b')
                   }}
                 >
                   {page.title}
@@ -344,8 +346,8 @@ export function TableOfContents({
         <button
           onClick={() => onCollapsedChange?.(false)}
           title="展开目录"
-          className="w-full flex items-center justify-center py-2 hover:bg-[#e2e8f0] transition-colors"
-          style={{ color: '#64748b' }}
+          className={`w-full flex items-center justify-center py-2 transition-colors ${useBlackMask ? 'hover:bg-white/10' : 'hover:bg-[#e2e8f0]'}`}
+          style={{ color: useBlackMask ? '#94a3b8' : '#64748b' }}
         >
           {side === 'left' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
@@ -379,8 +381,8 @@ export function TableOfContents({
         className={`flex items-center justify-between px-4 py-3 border-b select-none shrink-0 ${headerAlignWithPaper ? 'border-t' : ''}`}
         style={{ background: 'transparent', borderColor: '#e2e8f0', minHeight: 44 }}
       >
-        <div className="flex items-center gap-2" style={{ color: '#1e293b', fontSize: 13, fontWeight: 700 }}>
-          <BookOpen className="h-4 w-4 shrink-0" style={{ color: '#2B579A' }} />
+        <div className="flex items-center gap-2" style={{ color: useBlackMask ? '#e5e7eb' : '#1e293b', fontSize: 13, fontWeight: 700 }}>
+          <BookOpen className="h-4 w-4 shrink-0" style={{ color: useBlackMask ? '#60a5fa' : '#2B579A' }} />
           <span>目录</span>
         </div>
         <div className="flex items-center gap-1">
@@ -396,8 +398,8 @@ export function TableOfContents({
           <button
             onClick={() => onCollapsedChange?.(true)}
             title="折叠目录"
-            className="p-1 rounded hover:bg-[#e2e8f0] transition-colors"
-            style={{ color: '#64748b' }}
+            className={`p-1 rounded transition-colors ${useBlackMask ? 'hover:bg-white/10' : 'hover:bg-[#e2e8f0]'}`}
+            style={{ color: useBlackMask ? '#94a3b8' : '#64748b' }}
           >
             {side === 'left' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </button>
@@ -430,7 +432,9 @@ export function TableOfContents({
                 <div
                   key={page.id}
                   className={`flex items-center px-4 py-2.5 cursor-pointer transition-colors border-l-2 whitespace-nowrap ${
-                    page.id === activePageId ? 'bg-[#eff6ff] border-[#2B579A] text-[#1e40af]' : 'hover:bg-[#f1f5f9] text-[#475569] border-transparent'
+                    page.id === activePageId 
+                      ? (useBlackMask ? 'bg-blue-900/40 border-blue-500 text-blue-200' : 'bg-[#eff6ff] border-[#2B579A] text-[#1e40af]') 
+                      : (useBlackMask ? 'hover:bg-white/5 text-slate-300 border-transparent' : 'hover:bg-[#f1f5f9] text-[#475569] border-transparent')
                   }`}
                   onClick={() => onPageClick(page.id)}
                 >
