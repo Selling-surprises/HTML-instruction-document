@@ -38,6 +38,7 @@ interface TableOfContentsProps {
   opacity?: number;
   headerAlignWithPaper?: boolean;
   titleColor?: string;
+  sidebarTextColor?: string;
 }
 
 export function TableOfContents({
@@ -56,6 +57,7 @@ export function TableOfContents({
   opacity = 100,
   headerAlignWithPaper = false,
   titleColor,
+  sidebarTextColor,
 }: TableOfContentsProps) {
   // 记录节点的展开/折叠状态，默认全部展开
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
@@ -191,7 +193,7 @@ export function TableOfContents({
                 className={`group flex items-center pr-2 cursor-pointer transition-colors select-none ${
                   isDragging ? 'opacity-40' : ''
                 } ${showChild ? 'bg-[#dbeafe] ring-1 ring-inset ring-[#2B579A]' : ''} ${
-                  isActive && !showChild ? 'bg-[#eff6ff] text-[#1e40af]' : !showChild ? 'hover:bg-[#f1f5f9] text-[#475569]' : 'text-[#1e40af]'
+                  isActive && !showChild ? 'bg-[#eff6ff] text-[#1e40af]' : !showChild ? 'hover:bg-[#f1f5f9]' : 'text-[#1e40af]'
                 }`}
                 style={{
                   paddingLeft: indentPx,
@@ -199,6 +201,7 @@ export function TableOfContents({
                   paddingBottom: 9,
                   borderLeft: isActive && !showChild ? '3px solid #2B579A' : showChild ? '3px solid #2B579A' : '3px solid transparent',
                   cursor: isDragging ? 'grabbing' : 'pointer',
+                  color: (!isActive && !showChild) ? sidebarTextColor : undefined
                 }}
                 onClick={() => !isDragging && onPageClick(page.id)}
               >
@@ -378,8 +381,8 @@ export function TableOfContents({
         className={`flex items-center justify-between px-4 py-3 border-b select-none shrink-0 ${headerAlignWithPaper ? 'border-t' : ''}`}
         style={{ background: 'transparent', borderColor: '#e2e8f0', minHeight: 44 }}
       >
-        <div className="flex items-center gap-2" style={{ color: titleColor || '#1e293b', fontSize: 13, fontWeight: 700 }}>
-          <BookOpen className="h-4 w-4 shrink-0" style={{ color: '#2B579A' }} />
+        <div className="flex items-center gap-2" style={{ color: sidebarTextColor || '#1e293b', fontSize: 13, fontWeight: 700 }}>
+          <BookOpen className="h-4 w-4 shrink-0" style={{ color: sidebarTextColor || '#2B579A' }} />
           <span>目录</span>
         </div>
         <div className="flex items-center gap-1">

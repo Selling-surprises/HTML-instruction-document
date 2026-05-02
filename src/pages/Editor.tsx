@@ -200,6 +200,8 @@ export default function Editor() {
     enableSourceLink: false, // 默认不显示原链接
     sourceUrl: '', // 原文链接
     pageTitleColor: '#4361ee', // 文档标题颜色
+    sidebarBackgroundColor: '#f8fafc', // 侧边栏背景颜色
+    sidebarTextColor: '#334155', // 侧边栏文字颜色
   });
 
   // 链接编辑状态
@@ -1971,12 +1973,10 @@ export default function Editor() {
       ? `rgba(0, 0, 0, ${settings.opacity / 100})`
       : `rgba(255, 255, 255, ${settings.opacity / 100})`;
     
-    const sidebarBackgroundColor = useBlackMask
-      ? `rgba(30, 30, 30, ${settings.opacity / 100})`
-      : `rgba(248, 250, 252, ${settings.opacity / 100})`;
+    const sidebarBackgroundColor = settings.sidebarBackgroundColor;
 
     const textColor = useBlackMask ? '#ffffff' : '#333';
-    const sidebarTextColor = useBlackMask ? '#e5e7eb' : '#1e293b';
+    const sidebarTextColor = settings.sidebarTextColor;
     const headingColor = settings.pageTitleColor || (useBlackMask ? '#60a5fa' : '#4361ee');
     const linkColor = useBlackMask ? '#60a5fa' : '#4361ee';
     const linkHoverColor = useBlackMask ? '#93c5fd' : '#3f37c9';
@@ -3840,6 +3840,7 @@ export default function Editor() {
                 onMovePage={handleMovePage}
                 isCollapsed={false}
                 side="left"
+                sidebarTextColor={settings.sidebarTextColor}
               />
             </SheetContent>
           </Sheet>
@@ -3930,9 +3931,8 @@ export default function Editor() {
           className="hidden md:flex h-full shrink-0 flex-col border-r border-border"
           style={{ 
             width: tocCollapsed ? 28 : tocWidth,
-            background: settings.useBlackMask 
-              ? `rgba(30, 30, 30, ${settings.opacity / 100})`
-              : `rgba(248, 250, 252, ${settings.opacity / 100})`,
+            background: settings.sidebarBackgroundColor,
+            color: settings.sidebarTextColor,
             backdropFilter: settings.opacity < 100 ? 'blur(8px)' : 'none'
           }}
         >
@@ -3987,6 +3987,7 @@ export default function Editor() {
               opacity={settings.opacity}
               headerAlignWithPaper={true}
               titleColor={settings.pageTitleColor}
+              sidebarTextColor={settings.sidebarTextColor}
             />
           </div>
         </div>
