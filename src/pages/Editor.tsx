@@ -1938,7 +1938,7 @@ export default function Editor() {
               <a href="#page-${node.id}" class="sidebar-item ${node.id === defaultPageId ? 'active' : ''} level-${depth}" data-id="page-${node.id}" onclick="onSidebarItemClick(event,'page-${node.id}')">
                 <span class="toggle-arrow${hasChildren ? '' : ' invisible'}">${hasChildren ? '▶' : ''}</span>
                 <span class="file-icon">${hasChildren ? '📁' : '📄'}</span>
-                <span class="title">${node.title}</span>
+                <span class="title" style="color: ${node.titleColor || settings.pageTitleColor}">${node.title}</span>
               </a>
               ${childHtml}
             </div>

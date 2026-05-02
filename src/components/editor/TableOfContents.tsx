@@ -224,7 +224,7 @@ export function TableOfContents({
                   className={`flex-1 whitespace-nowrap ml-1.5 mr-1 text-sm ${level === 0 ? 'font-semibold' : 'font-normal'}`}
                   style={{ 
                     fontSize: 14,
-                    // 目录中的文字颜色保持默认或使用全局设置，特定页面的颜色修改仅应用于文档标题
+                    color: page.titleColor || titleColor || sidebarTextColor || '#1e293b'
                   }}
                 >
                   {page.title}

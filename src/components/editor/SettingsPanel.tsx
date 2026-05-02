@@ -105,7 +105,7 @@ export function SettingsPanel({
 
           {/* 文档标题颜色 */}
           <div className="space-y-3">
-            <Label>文档标题颜色</Label>
+            <Label>文档标题及目录文字颜色</Label>
             <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg border border-border">
               {PRESET_TOC_COLORS.map((item) => (
                 <button
@@ -139,7 +139,7 @@ export function SettingsPanel({
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              修改右侧内容区顶部文档标题及正文标题颜色
+              统一修改侧边栏目录、内容区顶部标题及正文标题颜色
             </p>
           </div>
 
