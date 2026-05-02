@@ -2581,8 +2581,8 @@ export default function Editor() {
       width: var(--sidebar-initial-width);
       height: 100vh;
       background: ${settings.enableGlassEffect ? 'transparent' : sidebarBackgroundColor};
-      backdrop-filter: ${settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : (settings.opacity < 100 ? 'blur(8px)' : 'none')};
-      -webkit-backdrop-filter: ${settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : (settings.opacity < 100 ? 'blur(8px)' : 'none')};
+      backdrop-filter: ${settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : 'none'};
+      -webkit-backdrop-filter: ${settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : 'none'};
       border-right: 1px solid ${borderColor};
       display: flex;
       flex-direction: column;
@@ -3928,12 +3928,13 @@ export default function Editor() {
       <div className="flex flex-1 overflow-hidden">
         {/* CHM 风格侧边栏（仅桌面端显示） */}
         <div
-          className="hidden md:flex h-full shrink-0 flex-col border-r border-border"
+          className="hidden md:flex h-full shrink-0 flex-col border-r border-border transition-all duration-300"
           style={{ 
             width: tocCollapsed ? 28 : tocWidth,
-            background: settings.sidebarBackgroundColor,
+            background: settings.enableGlassEffect ? 'transparent' : settings.sidebarBackgroundColor,
             color: settings.sidebarTextColor,
-            backdropFilter: settings.opacity < 100 ? 'blur(8px)' : 'none'
+            backdropFilter: settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : 'none',
+            WebkitBackdropFilter: settings.enableGlassEffect ? `blur(${settings.glassBlur}px)` : 'none'
           }}
         >
           {!tocCollapsed && (
